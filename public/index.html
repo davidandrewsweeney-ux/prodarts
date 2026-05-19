@@ -698,6 +698,39 @@ input::placeholder { color: var(--platinum-dim); opacity: .6; }
   background: rgba(231,76,60,0.25); border-color: #e74c3c; color: #e74c3c;
 }
 
+/* ── FORMAT / LEGS PICKER ── */
+.format-row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.format-lbl { font-size: 13px; color: var(--platinum-dim); white-space: nowrap; }
+.leg-btn {
+  padding: 6px 14px; border-radius: 20px;
+  border: 1px solid var(--bdr-dim); background: var(--obsidian-3);
+  color: var(--platinum-dim); font-family: var(--fd); font-size: 13px;
+  font-weight: 600; cursor: pointer; transition: all .15s;
+}
+.leg-btn.selected { background: rgba(201,168,76,.18); border-color: var(--gold-dim); color: var(--gold-light); }
+
+/* ── KILLER MODE ── */
+.killer-board {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px; margin: 10px 16px 14px;
+}
+.killer-card {
+  background: var(--obsidian-3); border: 1px solid var(--bdr-dim);
+  border-radius: var(--radius-sm); padding: 10px 8px; text-align: center; transition: all .2s;
+}
+.killer-card.is-killer { border-color: var(--amber); background: rgba(230,126,34,.08); }
+.killer-card.dead { opacity: .28; }
+.kcard-name { font-size: 12px; font-weight: 700; color: var(--platinum); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kcard-num { font-size: 11px; color: var(--gold); margin-bottom: 5px; }
+.kcard-lives { font-size: 14px; line-height: 1; }
+.killer-targets { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.killer-target-btn {
+  padding: 8px 14px; border-radius: var(--radius-sm);
+  border: 1px solid var(--bdr-dim); background: var(--obsidian-3);
+  color: var(--platinum-dim); font-size: 13px; cursor: pointer; transition: all .15s;
+}
+.killer-target-btn.active { border-color: var(--amber); color: var(--amber); background: rgba(230,126,34,.1); }
+
 /* Camera action row */
 .cam-actions { display: flex; gap: 9px; padding: 0 14px 13px; }
 .btn-undo-cam {
@@ -1412,6 +1445,19 @@ input::placeholder { color: var(--platinum-dim); opacity: .6; }
           <div class="mode-icon">🔄</div>
           <div><div class="mode-name">Around the Clock</div><div class="mode-desc">Hit 1 through 20 then bull</div></div>
         </div>
+        <div class="mode-card" id="mc-killer" onclick="setMode('killer',this)">
+          <div class="mode-icon">🔪</div>
+          <div><div class="mode-name">Killer</div><div class="mode-desc">Hit doubles to take lives — last player standing wins</div></div>
+        </div>
+      </div>
+
+      <span class="label" id="format-label">Format</span>
+      <div class="format-row" id="format-row">
+        <span class="format-lbl">First to</span>
+        <button class="leg-btn selected" id="lb-1" onclick="setLegsNeeded(1,this)">1 leg</button>
+        <button class="leg-btn" id="lb-3" onclick="setLegsNeeded(3,this)">3 legs</button>
+        <button class="leg-btn" id="lb-5" onclick="setLegsNeeded(5,this)">5 legs</button>
+        <button class="leg-btn" id="lb-7" onclick="setLegsNeeded(7,this)">7 legs</button>
       </div>
 
       <span class="label">Players</span>
@@ -1674,6 +1720,23 @@ input::placeholder { color: var(--platinum-dim); opacity: .6; }
       </div>
     </div>
 
+    <!-- Killer mode -->
+    <div id="killer-section" style="display:none">
+      <div class="killer-board" id="killer-board"></div>
+      <div class="score-entry">
+        <div class="turn-label">▶ <span id="killer-player-name">Player</span></div>
+        <div id="killer-phase-label" style="margin:6px 0 4px;font-size:14px;color:var(--gold)"></div>
+        <div id="killer-target-row" style="display:none;margin-top:10px">
+          <div class="format-lbl" style="margin-bottom:6px">Choose your target:</div>
+          <div class="killer-targets" id="killer-target-list"></div>
+        </div>
+        <div class="action-row" style="margin-top:14px">
+          <button class="btn-miss-sm" style="flex:1" onclick="killerMiss()">✗ Miss</button>
+          <button class="btn-hit" style="flex:2" id="killer-hit-btn" onclick="killerHit()">✓ HIT!</button>
+        </div>
+      </div>
+    </div>
+
     <div class="history"><div class="hist-label">Recent Turns</div><div id="history-list"></div></div>
   </div>
 </div>
@@ -1742,8 +1805,10 @@ const G = {
   isMP: false,
   isHost: false,
   roomCode: null,
-  ws: null,            // WebSocket connection
+  ws: null,
   myName: null,
+  legsNeeded: 1,
+  killerTarget: null,
 };
 
 // ════════════════════════════════════════════════════════
@@ -2044,6 +2109,15 @@ function setMode(m, el) {
   G.mode = m;
   document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
+  const showFormat = m !== 'atc' && m !== 'killer';
+  document.getElementById('format-label').style.display = showFormat ? '' : 'none';
+  document.getElementById('format-row').style.display = showFormat ? '' : 'none';
+}
+
+function setLegsNeeded(n, el) {
+  G.legsNeeded = n;
+  document.querySelectorAll('.leg-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
 }
 
 // ════════════════════════════════════════════════════════
@@ -2213,6 +2287,11 @@ function removePlayer() {
 
 function startGame() {
   const names = [...document.querySelectorAll('.pname')].map(i => i.value.trim() || 'Player');
+
+  if (G.mode === 'killer' && names.length < 2) {
+    showToast('Killer needs at least 2 players — add one below'); return;
+  }
+
   const startScore = parseInt(G.mode) || 501;
   G.players = names.map(name => ({
     name, score: startScore, legs: 0,
@@ -2221,7 +2300,7 @@ function startGame() {
     isBot: false, botLevel: null
   }));
 
-  if (botEnabled && !mpEnabled) {
+  if (botEnabled && !mpEnabled && G.mode !== 'killer') {
     const cfg = BOT_CONFIGS[currentBotLevel];
     G.players.push({
       name: `${cfg.label} Bot`, score: startScore, legs: 0,
@@ -2231,7 +2310,7 @@ function startGame() {
     });
   }
 
-  G.cur = 0; G.round = 1; G.history = []; G.darts = []; G.atcDarts = [];
+  G.cur = 0; G.round = 1; G.history = []; G.darts = []; G.atcDarts = []; G.killerTarget = null;
 
   if (mpEnabled) {
     setupMultiplayer();
@@ -2796,20 +2875,23 @@ function stopCam() {
 function startManualGame() {
   G.darts = []; G.atcDarts = [];
   buildPlayerTabs();
-  document.getElementById('game-mode-label').textContent = G.mode === 'atc' ? 'AROUND THE CLOCK' : G.mode;
+  const modeLabel = G.mode === 'atc' ? 'AROUND THE CLOCK' : G.mode === 'killer' ? 'KILLER' : G.mode;
+  document.getElementById('game-mode-label').textContent = modeLabel;
   updateGameRound();
   document.getElementById('atc-section').style.display = G.mode === 'atc' ? '' : 'none';
-  document.getElementById('x01-section').style.display = G.mode !== 'atc' ? '' : 'none';
+  document.getElementById('x01-section').style.display = (G.mode !== 'atc' && G.mode !== 'killer') ? '' : 'none';
+  document.getElementById('killer-section').style.display = G.mode === 'killer' ? '' : 'none';
   if (G.mode === 'atc') { buildATCBoard(); updateATCView(); }
+  else if (G.mode === 'killer') { startKillerGame(); }
   else { updateX01View(); }
   if (G.isMP) {
     const gcb = document.getElementById('game-call-btn');
     if (gcb) gcb.style.display = '';
   }
   const gcamBtn = document.getElementById('game-cam-btn');
-  if (gcamBtn) gcamBtn.style.display = '';
+  if (gcamBtn) gcamBtn.style.display = G.mode === 'killer' ? 'none' : '';
   goPage('page-game');
-  scheduleBotTurn();
+  if (G.mode !== 'killer') scheduleBotTurn();
 }
 
 function buildPlayerTabs() {
@@ -3077,9 +3159,124 @@ function refreshCurrentView() {
   showToast('🔄 Game updated');
 }
 
+// ── KILLER MODE ───────────────────────────────────────
+function startKillerGame() {
+  // Shuffle numbers 1-20 and assign one to each player
+  const nums = Array.from({length: 20}, (_, i) => i + 1);
+  for (let i = nums.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [nums[i], nums[j]] = [nums[j], nums[i]];
+  }
+  G.players.forEach((p, i) => {
+    p.killerNum = nums[i];
+    p.lives = 5;
+    p.isKiller = false;
+  });
+  G.killerTarget = null;
+  buildKillerBoard();
+  updateKillerView();
+}
+
+function buildKillerBoard() {
+  document.getElementById('killer-board').innerHTML = G.players.map(p =>
+    `<div class="killer-card${p.isKiller ? ' is-killer' : ''}${p.lives <= 0 ? ' dead' : ''}">
+      <div class="kcard-name">${p.name}${p.isKiller ? ' 🔪' : ''}</div>
+      <div class="kcard-num">D${p.killerNum}</div>
+      <div class="kcard-lives">${'❤️'.repeat(Math.max(0, p.lives))}${'🖤'.repeat(Math.max(0, 5 - p.lives))}</div>
+    </div>`
+  ).join('');
+}
+
+function updateKillerView() {
+  const p = G.players[G.cur];
+  document.getElementById('killer-player-name').textContent = p.name;
+  if (!p.isKiller) {
+    document.getElementById('killer-phase-label').innerHTML =
+      `Not armed — hit <strong>D${p.killerNum}</strong> to become a Killer`;
+    document.getElementById('killer-target-row').style.display = 'none';
+    document.getElementById('killer-hit-btn').textContent = `✓ Hit D${p.killerNum}!`;
+  } else {
+    const opponents = G.players.filter(op => op !== p && op.lives > 0);
+    if (!G.killerTarget || !opponents.find(op => op.name === G.killerTarget)) {
+      G.killerTarget = opponents[0]?.name || null;
+    }
+    document.getElementById('killer-phase-label').innerHTML = `Armed 🔪 — choose a target`;
+    const tl = document.getElementById('killer-target-list');
+    tl.innerHTML = opponents.map(op =>
+      `<button class="killer-target-btn${G.killerTarget === op.name ? ' active' : ''}"
+        onclick="setKillerTarget('${op.name.replace(/'/g, "\\'")}',this)">
+        ${op.name} ❤️×${op.lives}
+      </button>`
+    ).join('');
+    document.getElementById('killer-target-row').style.display = opponents.length ? '' : 'none';
+    const tgt = G.players.find(pl => pl.name === G.killerTarget);
+    document.getElementById('killer-hit-btn').textContent = tgt ? `✓ Hit D${tgt.killerNum}!` : '✓ HIT!';
+  }
+}
+
+function setKillerTarget(name, el) {
+  G.killerTarget = name;
+  document.querySelectorAll('.killer-target-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  const tgt = G.players.find(p => p.name === name);
+  if (tgt) document.getElementById('killer-hit-btn').textContent = `✓ Hit D${tgt.killerNum}!`;
+}
+
+function killerHit() {
+  const p = G.players[G.cur];
+  if (!p.isKiller) {
+    // Arm up — become a killer
+    p.isKiller = true;
+    playSound('hit');
+    showToast(`${p.name} is now a KILLER! 🔪`, 2000);
+    buildKillerBoard();
+    killerNext();
+  } else {
+    if (!G.killerTarget) { showToast('Select a target first'); return; }
+    const tgt = G.players.find(pl => pl.name === G.killerTarget);
+    if (!tgt) return;
+    tgt.lives = Math.max(0, tgt.lives - 1);
+    buildKillerBoard();
+    if (tgt.lives <= 0) {
+      playSound('bust');
+      showToast(`${tgt.name} eliminated! 💀`, 2500);
+      const alive = G.players.filter(pl => pl.lives > 0);
+      if (alive.length === 1) { killerWin(alive[0]); return; }
+    } else {
+      showToast(`${tgt.name} loses a life — ${tgt.lives} left`);
+    }
+    killerNext();
+  }
+}
+
+function killerMiss() { killerNext(); }
+
+function killerNext() {
+  G.killerTarget = null;
+  let next = (G.cur + 1) % G.players.length;
+  let tries = 0;
+  while (G.players[next].lives <= 0 && tries++ < G.players.length) {
+    next = (next + 1) % G.players.length;
+  }
+  if (next <= G.cur) { G.round++; updateGameRound(); }
+  G.cur = next;
+  updateKillerView();
+}
+
+function killerWin(p) {
+  playSound('win');
+  recordWin(p.name);
+  document.getElementById('win-name').textContent = p.name;
+  document.getElementById('win-rounds').textContent = G.round;
+  document.getElementById('win-avg').textContent = '—';
+  document.getElementById('win-high').textContent = '—';
+  goPage('page-win');
+  generateSummary(p);
+}
+
 // ── WIN ───────────────────────────────────────────────
 function handleWin(p) {
-  const legsNeeded = G.players.length <= 2 ? 2 : 1;
+  const legsNeeded = G.legsNeeded || 1;
   if (p.legs >= legsNeeded) {
     playSound('win');
     recordWin(p.name);
