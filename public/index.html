@@ -1449,6 +1449,7 @@ input::placeholder { color: var(--platinum-dim); opacity: .6; }
     <div class="round-badge" id="game-round-label">Round 1</div>
     <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
       <div class="sync-dot offline" id="game-sync-dot" title="Multiplayer sync"></div>
+      <button class="btn btn-secondary btn-sm" id="game-call-btn" onclick="toggleGameCall()" style="display:none" title="Video call">📞</button>
       <button class="btn btn-secondary btn-sm" onclick="openScorecard()">Stats</button>
       <button class="btn btn-secondary btn-sm" onclick="quitGame()">Quit</button>
     </div>
@@ -2232,6 +2233,9 @@ function camNext() {
 function quitGame() {
   if (confirm('Quit the current game?')) {
     stopCam();
+    if (callActive) endCall();
+    const gcb = document.getElementById('game-call-btn');
+    if (gcb) gcb.style.display = 'none';
     if (G.ws) { G.ws.close(); G.ws = null; }
     goPage('page-home');
   }
@@ -2257,6 +2261,10 @@ function startManualGame() {
   document.getElementById('x01-section').style.display = G.mode !== 'atc' ? '' : 'none';
   if (G.mode === 'atc') { buildATCBoard(); updateATCView(); }
   else { updateX01View(); }
+  if (G.isMP) {
+    const gcb = document.getElementById('game-call-btn');
+    if (gcb) gcb.style.display = '';
+  }
   goPage('page-game');
 }
 
@@ -2863,7 +2871,21 @@ let callStream = null;
 let callActive = false;
 let _micMuted = false;
 let _camMuted = false;
-const STUN_CONFIG = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] };
+const STUN_CONFIG = {
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    {
+      urls: [
+        'turn:openrelay.metered.ca:80',
+        'turn:openrelay.metered.ca:443',
+        'turn:openrelay.metered.ca:443?transport=tcp'
+      ],
+      username: 'openrelayproject',
+      credential: 'openrelayproject'
+    }
+  ]
+};
 
 async function startCall() {
   if (!G.isMP) { showToast('Video call only works in multiplayer mode'); return; }
@@ -2876,8 +2898,7 @@ async function startCall() {
     for (const p of G.players) {
       if (p.name !== G.myName) await createCallOffer(p.name).catch(() => {});
     }
-    const btn = document.getElementById('btn-start-call');
-    if (btn) { btn.textContent = 'Call Active'; btn.disabled = true; }
+    _updateCallBtns(true);
     showToast('Call started — connecting to players...');
   } catch (err) {
     const msg = err.name === 'NotAllowedError' ? 'Permission denied' : err.message;
@@ -2963,6 +2984,17 @@ function toggleCallCam() {
   btn.textContent = _camMuted ? '🙈' : '📷';
   btn.classList.toggle('on', !_camMuted);
 }
+function toggleGameCall() {
+  if (callActive) { endCall(); } else { startCall(); }
+}
+
+function _updateCallBtns(active) {
+  const lobbyBtn = document.getElementById('btn-start-call');
+  const gameBtn = document.getElementById('game-call-btn');
+  if (lobbyBtn) { lobbyBtn.textContent = active ? 'Call Active' : 'Start Video Call with Friends'; lobbyBtn.disabled = active; }
+  if (gameBtn) { gameBtn.textContent = active ? '📵' : '📞'; gameBtn.title = active ? 'End call' : 'Video call'; }
+}
+
 function endCall() {
   if (callStream) { callStream.getTracks().forEach(t => t.stop()); callStream = null; }
   Object.values(peers).forEach(pc => { try { pc.close(); } catch (e) {} });
@@ -2972,8 +3004,7 @@ function endCall() {
   document.getElementById('remote-vids').innerHTML = '';
   document.getElementById('local-vid').srcObject = null;
   callActive = false; _micMuted = false; _camMuted = false;
-  const btn = document.getElementById('btn-start-call');
-  if (btn) { btn.textContent = 'Start Video Call with Friends'; btn.disabled = false; }
+  _updateCallBtns(false);
   showToast('Call ended');
 }
 
