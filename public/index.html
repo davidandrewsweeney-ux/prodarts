@@ -687,6 +687,16 @@ input::placeholder { color: var(--platinum-dim); opacity: .6; }
   background: linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent);
   animation: sweep 1.1s infinite;
 }
+.auto-scan-btn {
+  display: block; width: calc(100% - 28px); margin: 0 14px 9px;
+  background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15);
+  color: var(--smoke); border-radius: var(--radius-sm);
+  font-family: var(--fd); font-size: 14px; font-weight: 600; letter-spacing: 1px;
+  padding: 10px; cursor: pointer; transition: all .2s;
+}
+.auto-scan-btn.active {
+  background: rgba(231,76,60,0.25); border-color: #e74c3c; color: #e74c3c;
+}
 
 /* Camera action row */
 .cam-actions { display: flex; gap: 9px; padding: 0 14px 13px; }
@@ -1577,6 +1587,7 @@ input::placeholder { color: var(--platinum-dim); opacity: .6; }
       <button class="scan-btn" id="scan-btn" onclick="scanBoard()">
         <span>📷</span><span id="scan-txt">SCAN BOARD — AI SCORE</span>
       </button>
+      <button class="auto-scan-btn" id="auto-scan-btn" onclick="toggleAutoScan()">🔁 Auto Scan</button>
 
       <div class="cam-actions">
         <button class="btn-undo-cam" onclick="camUndo()">↩ Undo</button>
@@ -2353,6 +2364,7 @@ function startCameraGame() {
   const isATC = G.mode === 'atc';
   document.getElementById('atc-cam-actions').classList.toggle('show', isATC);
   document.getElementById('scan-btn').style.display = isATC ? 'none' : '';
+  document.getElementById('auto-scan-btn').style.display = isATC ? 'none' : '';
   document.getElementById('cam-strategy').style.display = isATC ? 'none' : '';
   buildCamPills();
   updateCamRound();
@@ -2429,6 +2441,37 @@ function updateCamStrategy() {
 let _camZoom = 1.0;
 let _pinchStartDist = 0;
 let _pinchStartZoom = 1.0;
+
+// ── AUTO SCAN ─────────────────────────────────────────
+let _autoScanOn = false;
+let _autoScanTimer = null;
+
+function toggleAutoScan() {
+  _autoScanOn = !_autoScanOn;
+  const btn = document.getElementById('auto-scan-btn');
+  if (_autoScanOn) {
+    btn.textContent = '🔴 Auto: ON';
+    btn.classList.add('active');
+    // Scan immediately then on interval
+    scanBoard();
+    _autoScanTimer = setInterval(() => { scanBoard(); }, 4000);
+  } else {
+    btn.textContent = '🔁 Auto Scan';
+    btn.classList.remove('active');
+    clearInterval(_autoScanTimer);
+    _autoScanTimer = null;
+  }
+}
+
+function stopAutoScan() {
+  if (_autoScanOn) {
+    _autoScanOn = false;
+    clearInterval(_autoScanTimer);
+    _autoScanTimer = null;
+    const btn = document.getElementById('auto-scan-btn');
+    if (btn) { btn.textContent = '🔁 Auto Scan'; btn.classList.remove('active'); }
+  }
+}
 
 function adjustZoom(delta) { setCamZoom(_camZoom + delta); }
 
@@ -2530,18 +2573,31 @@ async function scanBoard() {
           role: 'user',
           content: [
             { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imgData } },
-            { type: 'text', text: `You are a darts scoring AI. Analyse this dartboard photo carefully.
+            { type: 'text', text: `You are a darts scoring AI. Analyse this dartboard photo step by step.
+
+STEP 1 — LOCATE THE BOARD: Find the circular dartboard by its outermost wire ring (the double ring). The board is circular with alternating black/white and red/green coloured segments. If you cannot clearly see a circular board, return low confidence.
+
+STEP 2 — ORIENT THE BOARD: The dartboard segment layout is always fixed. The number 20 segment is at the top (12 o'clock). Going clockwise from 20: 20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5 — then back to 20. Use the wire divisions visible on the board to orient correctly.
+
+STEP 3 — IDENTIFY RINGS: From the outside of the board inward:
+  • Double ring = thin outer coloured band (scores 2× segment)
+  • Single outer = large outer section between double and treble rings
+  • Treble ring = thin middle coloured band (scores 3× segment)
+  • Single inner = large inner section between treble ring and bull
+  • Bull (outer bull) = green/red ring around centre = 25 pts
+  • Bullseye (inner bull) = small centre circle = 50 pts
+
+STEP 4 — FIND DARTS: Look for dart shafts, flights, or tips protruding from the board surface. For each dart, use the board orientation from steps 2-3 to determine which segment number and ring it hit. Look carefully at where the tip enters the board.
 
 Game: ${G.mode} | Player: ${p.name} | Score left: ${p.score}
 
-Look for dart shafts, flights, or tips in the board. Identify each dart's segment (1-20, Bull, Bullseye) and ring (single/double/treble).
-
 Return ONLY valid JSON, no markdown, no explanation:
-{"darts":["T20","S5","D16"],"total":75,"confidence":"high","bust":false,"desc":"Brief description","tip":"Next move advice"}
+{"darts":["T20","S5","D16"],"total":75,"confidence":"high","bust":false,"desc":"Brief description of what you see","tip":"Suggested next move"}
 
-confidence: "high"=darts clearly visible, "medium"=partially visible, "low"=no darts or board not clear.
-If no darts: {"darts":[],"total":0,"confidence":"low","bust":false,"desc":"No darts detected","tip":""}
-bust: true if total > ${p.score} or total === ${p.score === 2 ? 1 : p.score-1}` }
+Dart label format: T=treble (e.g. T20), D=double (e.g. D16), S=single (e.g. S5), B=outer bull (25), DB=bullseye (50), M=miss
+confidence: "high"=board and darts clearly visible, "medium"=board visible but darts partially obscured, "low"=cannot see board clearly or no darts detected
+If no darts visible: {"darts":[],"total":0,"confidence":"low","bust":false,"desc":"No darts detected","tip":""}
+bust: true if total > ${p.score} or (total === ${p.score} and the last dart is not a double or bullseye)` }
           ]
         }]
       })
@@ -2598,6 +2654,7 @@ function showAIResult(html, done=false) {
 }
 
 function camConfirm() {
+  stopAutoScan();
   if (G.mode === 'atc') return;
   const p = G.players[G.cur];
   const tot = G.darts.reduce((s,d) => s+d.val, 0);
@@ -2667,6 +2724,7 @@ function camManualEntry() {
 
 // Switch from camera page to manual scoring page
 function switchToManualMode() {
+  stopAutoScan();
   G.useCam = false;
   const gcamBtn = document.getElementById('game-cam-btn');
   if (gcamBtn) gcamBtn.style.display = '';
