@@ -2864,9 +2864,16 @@ function enterScore(num, override) {
   updateX01Totals();
   if (val === 0) {} else if (num === 25 || num === 50) playSound('bull'); else playSound('hit');
   setMod('S');
+  const runningTot = G.darts.reduce((s,d) => s+d.val, 0);
+  const remaining = G.players[G.cur].score - runningTot;
+  const lastDart = G.darts[G.darts.length - 1];
+  const isCheckout = remaining === 0 && (lastDart.mult === 2 || lastDart.val === 50);
+
   if (G.darts.length === 3) {
-    const tot180 = G.darts.reduce((s,d) => s+d.val, 0);
-    if (tot180 === 180) { playSound('180'); showToast('ONE HUNDRED AND EIGHTY!', 3000); }
+    if (runningTot === 180) { playSound('180'); showToast('ONE HUNDRED AND EIGHTY!', 3000); }
+    document.getElementById('btn-confirm-g').disabled = false;
+  } else if (isCheckout) {
+    // Checked out on dart 1 or 2 — enable confirm immediately
     document.getElementById('btn-confirm-g').disabled = false;
   }
 }
