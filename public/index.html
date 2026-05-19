@@ -1,0 +1,3031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f1a14">
+<title>ProDarts</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+:root {
+  /* Luxury palette */
+  --obsidian: #080c10;
+  --obsidian-2: #0d1318;
+  --obsidian-3: #121a22;
+  --obsidian-4: #1a2430;
+  --gold: #c9a84c;
+  --gold-light: #e8c96d;
+  --gold-bright: #f5d98a;
+  --gold-dim: #8a6e2e;
+  --platinum: #d4d8de;
+  --platinum-dim: #8a9098;
+  --crimson: #8b1a2a;
+  --crimson-light: #c0392b;
+  --frost: rgba(255,255,255,0.06);
+  --frost-2: rgba(255,255,255,0.10);
+  --frost-3: rgba(255,255,255,0.16);
+  --gold-glow: rgba(201,168,76,0.18);
+  --gold-glow-2: rgba(201,168,76,0.32);
+  --bdr: rgba(201,168,76,0.22);
+  --bdr-dim: rgba(255,255,255,0.08);
+  --fd: 'Playfair Display', Georgia, serif;
+  --fb: 'Inter', system-ui, sans-serif;
+  --radius: 14px;
+  --radius-sm: 9px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%;
+  background: var(--obsidian);
+  color: var(--platinum);
+  font-family: var(--fb);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── PAGE SYSTEM ── */
+.page { display: none; height: 100%; flex-direction: column; }
+.page.show { display: flex; }
+.scroll { overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.scroll::-webkit-scrollbar { display: none; }
+
+/* ── KEYFRAMES ── */
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+@keyframes atcpulse { 0%,100%{opacity:1;box-shadow:0 0 0 0 var(--gold-glow-2)} 50%{opacity:.7;box-shadow:0 0 16px 4px var(--gold-glow)} }
+@keyframes sweep { to { left:150%; } }
+@keyframes spinning { to { transform:rotate(360deg); } }
+@keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+@keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+
+/* ── GOLD LINE DIVIDER ── */
+.gold-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: 0;
+  flex-shrink: 0;
+}
+
+/* ── TYPOGRAPHY ── */
+h1 {
+  font-family: var(--fd);
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--gold-light);
+  letter-spacing: 3px;
+  line-height: 1;
+  text-shadow: 0 0 40px rgba(201,168,76,0.4);
+}
+h1 span { color: var(--platinum); font-weight: 600; }
+.label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+  margin-bottom: 10px;
+  display: block;
+}
+.label::before { content: '— '; color: var(--gold); }
+
+/* ── INPUTS ── */
+input[type=text], input[type=number] {
+  background: var(--obsidian-3);
+  border: 1px solid var(--bdr);
+  border-radius: var(--radius-sm);
+  color: var(--platinum);
+  padding: 11px 16px;
+  font-family: var(--fb);
+  font-size: 15px;
+  font-weight: 400;
+  outline: none;
+  width: 100%;
+  transition: border-color .25s, box-shadow .25s;
+}
+input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-glow); }
+input::placeholder { color: var(--platinum-dim); opacity: .6; }
+
+/* ── BUTTONS ── */
+.btn {
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: var(--fb);
+  font-weight: 600;
+  padding: 14px 20px;
+  font-size: 14px;
+  transition: all .2s;
+  width: 100%;
+  letter-spacing: .5px;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 50%, var(--gold) 100%);
+  background-size: 200% 100%;
+  color: var(--obsidian);
+  font-family: var(--fd);
+  font-size: 18px;
+  letter-spacing: 2px;
+  font-weight: 700;
+  box-shadow: 0 4px 20px rgba(201,168,76,0.35), 0 1px 0 rgba(255,255,255,0.15) inset;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.2);
+}
+.btn-primary:hover { background-position: 100% 0; box-shadow: 0 6px 28px rgba(201,168,76,0.5); }
+.btn-primary:active { transform: scale(.98); box-shadow: 0 2px 10px rgba(201,168,76,0.3); }
+.btn-secondary {
+  background: var(--frost);
+  color: var(--platinum-dim);
+  border: 1px solid var(--bdr-dim);
+}
+.btn-secondary:hover { border-color: var(--bdr); color: var(--platinum); background: var(--frost-2); }
+.btn-secondary:active { transform: scale(.98); }
+.btn-green {
+  background: linear-gradient(135deg, #1e4d3a, #2d6b50);
+  color: #6ecfa0;
+  border: 1px solid rgba(110,207,160,.25);
+  box-shadow: 0 2px 12px rgba(110,207,160,.12);
+}
+.btn-green:hover { box-shadow: 0 4px 20px rgba(110,207,160,.22); color: #8de0b5; }
+.btn-danger { background: rgba(139,26,42,.2); color: #e05060; border: 1px solid rgba(192,57,43,.3); }
+.btn-sm { padding: 8px 14px; font-size: 12px; border-radius: var(--radius-sm); width: auto; letter-spacing: .3px; }
+
+/* ── LUXURY GLASS CARD ── */
+.lux-card {
+  background: linear-gradient(135deg, var(--obsidian-3) 0%, var(--obsidian-4) 100%);
+  border: 1px solid var(--bdr);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 32px rgba(0,0,0,.4), 0 1px 0 rgba(201,168,76,.1) inset;
+  position: relative;
+  overflow: hidden;
+}
+.lux-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,.5), transparent);
+}
+
+/* ── HOME PAGE ── */
+#page-home {
+  overflow-y: auto;
+  background: var(--obsidian);
+}
+.home-hero {
+  padding: 44px 24px 32px;
+  text-align: center;
+  background: linear-gradient(180deg, var(--obsidian-4) 0%, var(--obsidian-2) 100%);
+  position: relative;
+  overflow: hidden;
+}
+.home-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(201,168,76,.1) 0%, transparent 65%);
+  pointer-events: none;
+}
+.home-tagline {
+  font-size: 10px;
+  color: var(--gold-dim);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-top: 8px;
+  font-weight: 500;
+}
+.dartboard {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  margin: 20px auto 0;
+  background: conic-gradient(#0a0e12 0deg,#5a1020 18deg,#0a0e12 36deg,#5a1020 54deg,#0a0e12 72deg,#5a1020 90deg,#0a0e12 108deg,#5a1020 126deg,#0a0e12 144deg,#5a1020 162deg,#0a0e12 180deg,#5a1020 198deg,#0a0e12 216deg,#5a1020 234deg,#0a0e12 252deg,#5a1020 270deg,#0a0e12 288deg,#5a1020 306deg,#0a0e12 324deg,#5a1020 342deg,#0a0e12 360deg);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 0 2px var(--gold-dim), 0 0 0 5px var(--obsidian-2), 0 0 30px rgba(201,168,76,.25);
+  animation: none;
+}
+.dartboard::after {
+  content: '';
+  width: 18px; height: 18px;
+  background: radial-gradient(circle, var(--gold-bright), var(--gold));
+  border-radius: 50%;
+  border: 2px solid var(--obsidian);
+  box-shadow: 0 0 8px var(--gold-glow-2);
+}
+.home-body { padding: 24px 20px; max-width: 480px; margin: 0 auto; }
+
+/* Camera permission card */
+.cam-permission-card { border-radius: var(--radius); overflow: hidden; margin-bottom: 20px; }
+.cam-permission-inner {
+  background: linear-gradient(135deg, rgba(201,168,76,.06) 0%, var(--obsidian-4) 100%);
+  border: 1px solid var(--bdr);
+  border-radius: var(--radius);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.cam-permission-inner::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.cam-icon-big { font-size: 32px; margin-bottom: 10px; display: block; }
+.cam-perm-title {
+  font-family: var(--fd);
+  font-size: 18px;
+  color: var(--gold-light);
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+.cam-perm-sub { font-size: 13px; color: var(--platinum-dim); line-height: 1.6; margin-bottom: 14px; font-weight: 300; }
+.cam-status-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 7px; }
+.cam-status-dot.granted { background: #6ecfa0; box-shadow: 0 0 6px rgba(110,207,160,.5); }
+.cam-status-dot.denied { background: #e05060; }
+.cam-status-dot.unknown { background: var(--gold); animation: blink 1.2s infinite; }
+.cam-status-text { font-size: 12px; font-weight: 500; color: var(--platinum-dim); }
+
+/* Mode cards */
+.mode-grid { display: grid; gap: 8px; margin-bottom: 20px; }
+.mode-card {
+  background: var(--obsidian-3);
+  border: 1px solid var(--bdr-dim);
+  border-radius: var(--radius-sm);
+  padding: 15px 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: all .22s;
+  position: relative;
+  overflow: hidden;
+}
+.mode-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(201,168,76,.04), transparent);
+  opacity: 0;
+  transition: opacity .2s;
+}
+.mode-card:hover { border-color: var(--bdr); }
+.mode-card:hover::after { opacity: 1; }
+.mode-card:active { transform: scale(.985); }
+.mode-card.selected {
+  border-color: var(--gold-dim);
+  background: linear-gradient(135deg, rgba(201,168,76,.08), var(--obsidian-4));
+  box-shadow: 0 4px 20px rgba(201,168,76,.12);
+}
+.mode-card.selected::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+}
+.mode-icon { font-size: 22px; flex-shrink: 0; filter: saturate(.8); }
+.mode-name {
+  font-family: var(--fd);
+  font-size: 18px;
+  color: var(--platinum);
+  letter-spacing: .5px;
+  font-weight: 600;
+}
+.mode-card.selected .mode-name { color: var(--gold-light); }
+.mode-desc { font-size: 11px; color: var(--platinum-dim); margin-top: 2px; font-weight: 300; }
+
+/* Player inputs */
+.player-list { margin-bottom: 12px; }
+.player-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+.player-badge {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+  color: var(--obsidian);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(201,168,76,.25);
+}
+
+/* Multiplayer section */
+.mp-section { margin-bottom: 20px; }
+.mp-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--obsidian-3);
+  border: 1px solid var(--bdr-dim);
+  border-radius: var(--radius-sm);
+  padding: 15px 18px;
+  cursor: pointer;
+  transition: all .22s;
+}
+.mp-row.on { border-color: var(--gold-dim); background: linear-gradient(135deg, rgba(201,168,76,.06), var(--obsidian-4)); }
+.mp-label { font-size: 14px; font-weight: 500; color: var(--platinum); }
+.mp-sub { font-size: 11px; color: var(--platinum-dim); margin-top: 2px; font-weight: 300; }
+.toggle {
+  width: 42px; height: 23px;
+  background: var(--obsidian);
+  border: 1px solid var(--bdr-dim);
+  border-radius: 12px;
+  position: relative;
+  transition: all .25s;
+  flex-shrink: 0;
+}
+.toggle.on {
+  background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+  border-color: var(--gold);
+  box-shadow: 0 0 10px var(--gold-glow-2);
+}
+.toggle::after {
+  content: '';
+  position: absolute;
+  width: 17px; height: 17px;
+  background: var(--platinum);
+  border-radius: 50%;
+  top: 2px; left: 2px;
+  transition: transform .25s;
+  box-shadow: 0 1px 4px rgba(0,0,0,.4);
+}
+.toggle.on::after { transform: translateX(19px); }
+
+/* ── LOBBY PAGE ── */
+#page-lobby {
+  background: var(--obsidian);
+  align-items: center; justify-content: center;
+  padding: 24px; overflow-y: auto;
+}
+.lobby-box { width: 100%; max-width: 420px; }
+.room-code {
+  font-family: var(--fd);
+  font-size: 52px;
+  font-weight: 700;
+  color: var(--gold-light);
+  letter-spacing: 12px;
+  text-align: center;
+  background: var(--obsidian-3);
+  border: 1px solid var(--bdr);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 14px;
+  text-shadow: 0 0 30px rgba(201,168,76,.4);
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+}
+.copy-link {
+  background: var(--obsidian-3);
+  border: 1px solid var(--bdr-dim);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-size: 12px;
+  color: var(--platinum-dim);
+  cursor: pointer;
+  margin-bottom: 16px;
+  transition: border-color .2s;
+  word-break: break-all;
+}
+.copy-link:active { border-color: var(--gold); }
+.copy-label { font-size: 9px; color: var(--gold-dim); font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
+.lobby-players { margin-bottom: 16px; }
+.lobby-player-row {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--obsidian-3);
+  border: 1px solid var(--bdr-dim);
+  border-radius: var(--radius-sm);
+  padding: 11px 16px;
+  margin-bottom: 6px;
+}
+.online-dot { width: 7px; height: 7px; background: #6ecfa0; border-radius: 50%; box-shadow: 0 0 6px rgba(110,207,160,.5); flex-shrink: 0; }
+.lobby-player-name { font-weight: 500; font-size: 14px; color: var(--platinum); }
+.host-badge { margin-left: auto; font-size: 9px; color: var(--gold); font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+
+/* ── CAMERA PAGE ── */
+#page-camera { position: relative; background: #000; overflow: hidden; }
+#vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+#snap-canvas { display: none; }
+
+/* Camera HUD */
+.hud { position: absolute; inset: 0; pointer-events: none; }
+.hud-top {
+  position: absolute; top: 0; left: 0; right: 0;
+  padding: max(env(safe-area-inset-top), 14px) 16px 18px;
+  background: linear-gradient(to bottom, rgba(8,12,16,.92) 0%, transparent 100%);
+  display: flex; align-items: center; gap: 10px;
+  pointer-events: all;
+}
+.hud-logo {
+  font-family: var(--fd);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gold-light);
+  letter-spacing: 1px;
+  text-shadow: 0 0 20px rgba(201,168,76,.5);
+}
+.hud-mode {
+  background: rgba(8,12,16,.7);
+  border: 1px solid rgba(201,168,76,.25);
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  padding: 4px 12px;
+  color: var(--gold);
+  backdrop-filter: blur(8px);
+  text-transform: uppercase;
+}
+.hud-quit {
+  margin-left: auto;
+  background: rgba(8,12,16,.7);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: var(--radius-sm);
+  color: var(--platinum-dim);
+  padding: 6px 13px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: all .2s;
+}
+.hud-quit:active { border-color: rgba(201,168,76,.4); color: var(--gold); }
+
+/* Score pills */
+.score-pills {
+  position: absolute; top: 58px; left: 0; right: 0;
+  display: flex; gap: 7px;
+  padding: 8px 14px;
+  overflow-x: auto; scrollbar-width: none;
+  pointer-events: all;
+}
+.score-pills::-webkit-scrollbar { display: none; }
+.pill {
+  background: rgba(8,12,16,.78);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 11px;
+  padding: 7px 14px;
+  text-align: center;
+  min-width: 72px;
+  flex-shrink: 0;
+  transition: all .2s;
+}
+.pill.active {
+  border-color: rgba(201,168,76,.5);
+  background: rgba(201,168,76,.15);
+  box-shadow: 0 0 16px rgba(201,168,76,.15);
+}
+.pill-name { font-size: 8px; color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing: 2px; font-weight: 600; }
+.pill-score { font-family: var(--fd); font-size: 26px; font-weight: 700; color: var(--platinum); line-height: 1.1; }
+.pill.active .pill-score { color: var(--gold-light); text-shadow: 0 0 12px rgba(201,168,76,.4); }
+.pill-legs { font-size: 8px; color: rgba(255,255,255,.25); letter-spacing: 1px; }
+.round-pill {
+  position: absolute; top: 60px; right: 14px;
+  background: rgba(8,12,16,.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 500;
+  color: rgba(255,255,255,.4);
+  letter-spacing: 1px;
+  pointer-events: none;
+}
+
+/* Reticle */
+.reticle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -52%); width: 220px; height: 220px; pointer-events: none; }
+.reticle svg { width: 100%; height: 100%; }
+
+/* Bottom HUD */
+.hud-bottom {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 0 0 max(env(safe-area-inset-bottom), 14px);
+  background: linear-gradient(to top, rgba(8,12,16,.97) 0%, rgba(8,12,16,.75) 55%, transparent 100%);
+  pointer-events: all;
+}
+.strategy-strip {
+  display: flex; align-items: flex-start; gap: 10px;
+  margin: 0 14px 10px;
+  background: rgba(201,168,76,.07);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(201,168,76,.2);
+  border-radius: var(--radius-sm);
+  padding: 9px 13px;
+  font-size: 12px;
+}
+.strategy-darts-row { display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap; }
+.s-dart {
+  background: rgba(8,12,16,.6);
+  border: 1px solid rgba(201,168,76,.3);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  color: var(--gold-dim);
+  font-weight: 700;
+  letter-spacing: .5px;
+}
+.s-dart.key { border-color: var(--gold); color: var(--gold-light); }
+
+/* Dart slots */
+.dart-slots { display: flex; gap: 9px; padding: 10px 14px 6px; }
+.d-slot {
+  flex: 1;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--radius-sm);
+  padding: 7px 4px;
+  text-align: center;
+  transition: all .2s;
+}
+.d-slot.filled { border-color: rgba(201,168,76,.45); background: rgba(201,168,76,.1); }
+.d-slot-label { font-size: 8px; color: rgba(255,255,255,.3); text-transform: uppercase; letter-spacing: 2px; font-weight: 600; }
+.d-slot-val { font-family: var(--fd); font-size: 20px; font-weight: 700; color: var(--platinum-dim); line-height: 1.1; margin-top: 1px; }
+.d-slot.filled .d-slot-val { color: var(--gold-light); }
+
+/* Turn row */
+.turn-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 14px 10px; }
+.turn-group {}
+.turn-small { font-size: 9px; color: rgba(255,255,255,.3); text-transform: uppercase; letter-spacing: 2px; font-weight: 600; }
+.turn-big { font-family: var(--fd); font-size: 28px; font-weight: 700; color: var(--platinum); line-height: 1.1; }
+.turn-big.danger { color: var(--gold-light); text-shadow: 0 0 12px rgba(201,168,76,.4); }
+.turn-big.bust { color: #e05060; text-shadow: 0 0 12px rgba(224,80,96,.4); }
+
+/* AI result */
+.ai-result {
+  margin: 0 14px 8px;
+  background: rgba(8,12,16,.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(201,168,76,.25);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  display: none;
+}
+.ai-result.show { display: block; }
+.ai-result-label {
+  font-size: 9px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+  margin-bottom: 4px;
+  display: flex; align-items: center; gap: 7px;
+}
+.ai-dot { width: 6px; height: 6px; background: #6ecfa0; border-radius: 50%; animation: pulse 1.4s infinite; }
+.ai-dot.done { animation: none; background: var(--gold); box-shadow: 0 0 6px var(--gold-glow-2); }
+.ai-result-text { font-size: 12px; color: var(--platinum-dim); line-height: 1.55; font-weight: 300; }
+
+/* ATC cam actions */
+.atc-actions { padding: 0 14px 8px; display: none; gap: 9px; }
+.atc-actions.show { display: flex; }
+.btn-hit {
+  flex: 2;
+  background: linear-gradient(135deg, #1a3d2a, #22533a);
+  color: #6ecfa0;
+  border: 1px solid rgba(110,207,160,.3);
+  border-radius: var(--radius-sm);
+  font-family: var(--fd);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 15px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(110,207,160,.1);
+  transition: all .2s;
+}
+.btn-hit:active { transform: scale(.97); }
+.btn-miss-sm {
+  flex: 1;
+  background: rgba(255,255,255,.05);
+  color: rgba(255,255,255,.45);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 15px 8px;
+  cursor: pointer;
+  transition: all .2s;
+}
+
+/* Scan button */
+.scan-btn {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin: 0 14px 9px;
+  background: linear-gradient(135deg, var(--gold-dim) 0%, var(--gold-light) 50%, var(--gold-dim) 100%);
+  background-size: 200% 100%;
+  color: var(--obsidian);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--fd);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  padding: 16px;
+  cursor: pointer;
+  width: calc(100% - 28px);
+  position: relative; overflow: hidden;
+  transition: all .22s;
+  box-shadow: 0 4px 20px rgba(201,168,76,.3);
+}
+.scan-btn:hover { background-position: 100% 0; box-shadow: 0 6px 28px rgba(201,168,76,.45); }
+.scan-btn:active { transform: scale(.98); }
+.scan-btn.scanning { background: linear-gradient(135deg, #9a7830, var(--gold), #9a7830); animation: none; }
+.scan-btn.scanning::after {
+  content: '';
+  position: absolute; left: -100%; top: 0; width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent);
+  animation: sweep 1.1s infinite;
+}
+
+/* Camera action row */
+.cam-actions { display: flex; gap: 9px; padding: 0 14px 13px; }
+.btn-undo-cam {
+  flex: 1;
+  background: rgba(255,255,255,.05);
+  color: rgba(255,255,255,.45);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 500;
+  padding: 13px; cursor: pointer; transition: all .2s;
+}
+.btn-confirm-cam {
+  flex: 2;
+  background: linear-gradient(135deg, var(--gold-dim), var(--gold-light));
+  color: var(--obsidian);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--fd);
+  font-size: 20px; font-weight: 700; letter-spacing: 2px;
+  padding: 13px; cursor: pointer;
+  transition: all .2s;
+  box-shadow: 0 3px 14px rgba(201,168,76,.3);
+}
+.btn-confirm-cam:disabled { opacity: .22; cursor: not-allowed; box-shadow: none; }
+.btn-confirm-cam:active:not(:disabled) { transform: scale(.97); }
+.btn-manual-cam {
+  flex: 1;
+  background: rgba(255,255,255,.05);
+  color: rgba(255,255,255,.45);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 500;
+  padding: 13px 6px; cursor: pointer; transition: all .2s;
+}
+
+/* ── GAME PAGE (manual) ── */
+#page-game { background: var(--obsidian); overflow: hidden; }
+.game-header {
+  background: var(--obsidian-2);
+  border-bottom: none;
+  padding: 11px 18px;
+  display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0;
+  position: relative;
+}
+.game-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+}
+.game-mode {
+  font-family: var(--fd);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gold-light);
+  letter-spacing: 1px;
+}
+.round-badge {
+  background: var(--obsidian-3);
+  border: 1px solid var(--bdr-dim);
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--platinum-dim);
+  padding: 3px 11px;
+  letter-spacing: 1px;
+}
+
+/* Players tabs */
+.players-tabs {
+  display: flex;
+  border-bottom: none;
+  overflow-x: auto; scrollbar-width: none;
+  flex-shrink: 0;
+  background: var(--obsidian-2);
+  position: relative;
+}
+.players-tabs::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--bdr-dim), transparent);
+}
+.players-tabs::-webkit-scrollbar { display: none; }
+.p-tab {
+  flex: 1; min-width: 88px;
+  padding: 10px 8px;
+  text-align: center;
+  border-right: 1px solid var(--obsidian-3);
+  position: relative;
+  transition: background .2s;
+  cursor: default;
+}
+.p-tab:last-child { border-right: none; }
+.p-tab.active { background: linear-gradient(180deg, rgba(201,168,76,.07), transparent); }
+.p-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 20%; right: 20%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  border-radius: 2px;
+}
+.p-tab-name { font-size: 9px; font-weight: 600; color: var(--platinum-dim); text-transform: uppercase; letter-spacing: 2px; }
+.p-tab.active .p-tab-name { color: var(--gold-dim); }
+.p-tab-score { font-family: var(--fd); font-size: 27px; font-weight: 700; color: var(--platinum); line-height: 1.1; }
+.p-tab.active .p-tab-score { color: var(--gold-light); text-shadow: 0 0 12px rgba(201,168,76,.3); }
+.p-tab-legs { font-size: 8px; color: var(--platinum-dim); letter-spacing: 1px; opacity: .6; }
+
+.leg-banner {
+  display: none;
+  margin: 10px 16px 0;
+  background: linear-gradient(135deg, rgba(201,168,76,.1), rgba(201,168,76,.05));
+  border: 1px solid var(--gold-dim);
+  border-radius: var(--radius-sm);
+  padding: 11px 16px;
+  text-align: center;
+  font-family: var(--fd);
+  font-size: 16px; font-weight: 700;
+  color: var(--gold-light);
+  letter-spacing: 2px;
+  box-shadow: 0 4px 20px rgba(201,168,76,.1);
+}
+.leg-banner.show { display: block; }
+
+/* Score entry */
+.score-entry {
+  padding: 14px 16px;
+  background: var(--obsidian-2);
+  border-bottom: none;
+  flex-shrink: 0;
+  position: relative;
+}
+.score-entry::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 16px; right: 16px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--bdr-dim), transparent);
+}
+.turn-label {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--gold-dim);
+  margin-bottom: 10px;
+}
+.dart-row { display: flex; gap: 7px; margin-bottom: 12px; }
+.dart-box {
+  flex: 1;
+  background: var(--obsidian-3);
+  border: 1px solid var(--bdr-dim);
+  border-radius: var(--radius-sm);
+  padding: 8px 4px;
+  text-align: center;
+  transition: all .2s;
+}
+.dart-box.filled { border-color: var(--gold-dim); background: rgba(201,168,76,.07); }
+.dart-box-label { font-size: 8px; color: var(--platinum-dim); text-transform: uppercase; letter-spacing: 2px; font-weight: 600; opacity: .6; }
+.dart-box-val { font-family: var(--fd); font-size: 20px; font-weight: 700; color: var(--gold-light); line-height: 1.1; }
+.score-totals { display: flex; justify-content: space-between; align-items: flex-end; }
+.stot-label { font-size: 10px; color: var(--platinum-dim); text-transform: uppercase; letter-spacing: 1px; font-weight: 500; margin-bottom: 2px; }
+.stot-val { font-family: var(--fd); font-size: 28px; font-weight: 700; color: var(--platinum); }
+
+/* Numpad */
+.numpad-section { padding: 12px 16px; flex-shrink: 0; }
+.mod-row { display: flex; gap: 6px; margin-bottom: 9px; }
+.mod-btn {
+  flex: 1;
+  background: var(--obsidian-3);
+  border: 1px solid var(--bdr-dim);
+  border-radius: var(--radius-sm);
+  color: var(--platinum-dim);
+  padding: 8px;
+  font-size: 11px; font-weight: 600;
+  cursor: pointer; text-align: center;
+  transition: all .15s;
+  letter-spacing: .5px;
+}
+.mod-btn.active {
+  background: linear-gradient(135deg, rgba(201,168,76,.15), rgba(201,168,76,.08));
+  border-color: var(--gold-dim);
+  color: var(--gold-light);
+}
+.numpad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-bottom: 8px; }
+.np-btn {
+  background: var(--obsidian-3);
+  border: 1px solid var(--bdr-dim);
+  border-radius: var(--radius-sm);
+  color: var(--platinum);
+  padding: 11px 4px;
+  font-size: 14px; font-weight: 500;
+  cursor: pointer; text-align: center;
+  transition: all .12s;
+}
+.np-btn:hover { border-color: var(--bdr); background: var(--obsidian-4); }
+.np-btn:active { background: rgba(201,168,76,.1); border-color: var(--gold-dim); transform: scale(.95); }
+.np-btn.d { color: #6ecfa0; }
+.np-btn.t { color: var(--gold); }
+.np-btn.bull { background: rgba(139,26,42,.2); color: #e05060; border-color: rgba(139,26,42,.3); }
+.special-row { display: flex; gap: 5px; margin-bottom: 10px; }
+.action-row { display: flex; gap: 9px; }
+.btn-confirm-g {
+  flex: 2;
+  background: linear-gradient(135deg, var(--gold-dim), var(--gold-light));
+  color: var(--obsidian);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--fd);
+  font-size: 18px; font-weight: 700; letter-spacing: 2px;
+  padding: 13px;
+  cursor: pointer;
+  transition: all .2s;
+  box-shadow: 0 3px 14px rgba(201,168,76,.25);
+}
+.btn-confirm-g:disabled { opacity: .25; cursor: not-allowed; box-shadow: none; }
+.btn-confirm-g:active:not(:disabled) { transform: scale(.97); }
+.btn-undo-g {
+  background: var(--obsidian-3);
+  color: var(--platinum-dim);
+  border: 1px solid var(--bdr-dim);
+  border-radius: var(--radius-sm);
+  padding: 13px 16px;
+  cursor: pointer; font-size: 13px; font-weight: 500;
+  transition: all .2s;
+}
+.btn-undo-g:active { border-color: var(--bdr); }
+
+/* Strategy */
+.strategy {
+  margin: 12px 16px 0;
+  background: linear-gradient(135deg, rgba(201,168,76,.05), var(--obsidian-3));
+  border: 1px solid var(--bdr);
+  border-radius: var(--radius-sm);
+  padding: 13px 15px;
+  position: relative; overflow: hidden;
+}
+.strategy::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+}
+.strategy-title {
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--gold-dim); margin-bottom: 5px;
+}
+.strategy-text { font-size: 13px; color: var(--platinum-dim); line-height: 1.55; font-weight: 300; }
+.strategy-darts { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.st-dart {
+  background: var(--obsidian);
+  border: 1px solid var(--bdr-dim);
+  border-radius: 4px;
+  padding: 3px 10px;
+  font-size: 11px; font-weight: 700;
+  color: var(--platinum-dim);
+  letter-spacing: .5px;
+}
+.st-dart.key { border-color: var(--gold-dim); color: var(--gold-light); }
+
+/* ATC board */
+.atc-board {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 5px; padding: 13px 16px;
+  background: var(--obsidian-2);
+  flex-shrink: 0;
+  position: relative;
+}
+.atc-board::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 16px; right: 16px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--bdr-dim), transparent);
+}
+.atc-num {
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600;
+  background: var(--obsidian-3);
+  border: 1px solid var(--bdr-dim);
+  color: var(--platinum-dim);
+  transition: all .2s;
+}
+.atc-num.hit {
+  background: rgba(110,207,160,.1);
+  border-color: rgba(110,207,160,.35);
+  color: #6ecfa0;
+}
+.atc-num.current {
+  background: rgba(201,168,76,.12);
+  border-color: var(--gold-dim);
+  color: var(--gold-light);
+  animation: atcpulse 1.6s infinite;
+}
+.atc-num.bull { background: rgba(139,26,42,.15); border-color: rgba(139,26,42,.35); color: #e05060; }
+
+/* History */
+.history { padding: 12px 16px 80px; }
+.hist-label {
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--platinum-dim); opacity: .5;
+  margin-bottom: 8px;
+}
+.hist-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--obsidian-2);
+  border: 1px solid var(--bdr-dim);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  margin-bottom: 5px;
+  transition: border-color .2s;
+}
+.hist-player { font-weight: 500; font-size: 13px; color: var(--platinum); }
+.hist-darts { font-size: 11px; color: var(--platinum-dim); font-weight: 300; }
+.hist-score { font-family: var(--fd); font-size: 17px; font-weight: 700; color: var(--gold); }
+.hist-rem { font-size: 10px; color: var(--platinum-dim); letter-spacing: .5px; }
+
+/* ── WIN PAGE ── */
+#page-win {
+  overflow-y: auto;
+  align-items: center; justify-content: center;
+  padding: 32px 24px;
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 0%, rgba(201,168,76,.08) 0%, var(--obsidian) 60%);
+}
+.win-trophy { font-size: 72px; margin-bottom: 12px; filter: drop-shadow(0 0 20px rgba(201,168,76,.4)); }
+.win-title {
+  font-family: var(--fd);
+  font-size: 52px; font-weight: 700;
+  color: var(--gold-light);
+  letter-spacing: 5px;
+  text-shadow: 0 0 40px rgba(201,168,76,.5);
+}
+.win-player {
+  font-family: var(--fd);
+  font-size: 26px; font-weight: 600;
+  color: var(--platinum-dim);
+  margin: 8px 0 0;
+  letter-spacing: 1px;
+}
+.win-stats { display: flex; gap: 12px; justify-content: center; margin: 24px 0; flex-wrap: wrap; }
+.win-stat {
+  background: var(--obsidian-3);
+  border: 1px solid var(--bdr);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  position: relative; overflow: hidden;
+}
+.win-stat::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+}
+.win-stat-val { font-family: var(--fd); font-size: 32px; font-weight: 700; color: var(--gold-light); }
+.win-stat-label { font-size: 9px; color: var(--platinum-dim); text-transform: uppercase; letter-spacing: 2px; margin-top: 2px; font-weight: 600; }
+.ai-summary {
+  background: linear-gradient(135deg, rgba(201,168,76,.05), var(--obsidian-3));
+  border: 1px solid var(--bdr);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  width: 100%; max-width: 400px;
+  margin: 0 auto 24px;
+  font-size: 13px;
+  color: var(--platinum-dim);
+  line-height: 1.6;
+  font-weight: 300;
+  text-align: left;
+}
+.ai-sum-label {
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--gold-dim);
+  margin-bottom: 6px;
+  display: flex; align-items: center; gap: 7px;
+}
+
+/* ── JOIN PAGE ── */
+#page-join {
+  overflow-y: auto;
+  align-items: center; justify-content: center;
+  padding: 24px;
+  background: var(--obsidian);
+}
+.join-box {
+  background: linear-gradient(135deg, var(--obsidian-3), var(--obsidian-4));
+  border: 1px solid var(--bdr);
+  border-radius: var(--radius);
+  padding: 30px;
+  width: 100%; max-width: 380px;
+  text-align: center;
+  box-shadow: 0 16px 48px rgba(0,0,0,.5);
+  position: relative; overflow: hidden;
+}
+.join-box::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+/* ── MANUAL ENTRY MODAL ── */
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0,0,0,.85);
+  backdrop-filter: blur(12px);
+  display: none; flex-direction: column;
+  align-items: center; justify-content: flex-end;
+  padding-bottom: max(env(safe-area-inset-bottom), 0px);
+}
+.modal-backdrop.open { display: flex; }
+.modal-sheet {
+  background: linear-gradient(180deg, var(--obsidian-3), var(--obsidian-2));
+  border-radius: 20px 20px 0 0;
+  width: 100%; max-width: 500px;
+  padding: 20px;
+  border-top: 1px solid var(--bdr);
+  box-shadow: 0 -8px 40px rgba(0,0,0,.5);
+}
+.modal-title {
+  font-family: var(--fd);
+  font-size: 20px; font-weight: 700;
+  color: var(--gold-light);
+  letter-spacing: 2px;
+  text-align: center;
+  margin-bottom: 14px;
+}
+.modal-mod-row { display: flex; gap: 6px; margin-bottom: 9px; }
+.modal-np { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-bottom: 9px; }
+
+/* ── CAMERA PERMISSION PAGE ── */
+#page-cam-request {
+  background: radial-gradient(ellipse at 50% 30%, rgba(201,168,76,.06) 0%, var(--obsidian) 60%);
+  align-items: center; justify-content: center; padding: 24px;
+}
+.cam-req-box { max-width: 380px; width: 100%; text-align: center; }
+.cam-req-icon { font-size: 72px; margin-bottom: 16px; display: block; filter: drop-shadow(0 0 20px rgba(201,168,76,.3)); }
+.cam-req-title {
+  font-family: var(--fd);
+  font-size: 32px; font-weight: 700;
+  color: var(--gold-light);
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+.cam-req-desc { font-size: 14px; color: var(--platinum-dim); line-height: 1.7; margin-bottom: 28px; font-weight: 300; }
+.cam-req-note { font-size: 11px; color: var(--platinum-dim); margin-top: 14px; line-height: 1.6; opacity: .6; }
+
+/* ── OVERLAYS ── */
+.bust-overlay {
+  position: fixed; inset: 0;
+  background: rgba(139,26,42,.55);
+  backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 999; opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.bust-overlay.show { opacity: 1; }
+.bust-word {
+  font-family: var(--fd);
+  font-size: 84px; font-weight: 700;
+  color: white;
+  letter-spacing: 8px;
+  text-shadow: 0 0 40px rgba(255,255,255,.3);
+}
+.toast {
+  position: fixed; bottom: 26px; left: 50%;
+  transform: translateX(-50%) translateY(14px);
+  background: var(--obsidian-3);
+  border: 1px solid var(--bdr);
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 13px; font-weight: 400;
+  color: var(--platinum);
+  opacity: 0;
+  transition: all .3s;
+  z-index: 1000;
+  white-space: nowrap; max-width: 90vw;
+  text-align: center; pointer-events: none;
+  box-shadow: 0 8px 24px rgba(0,0,0,.4);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Spinner */
+.spin {
+  display: inline-block; width: 12px; height: 12px;
+  border: 2px solid rgba(201,168,76,.2);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spinning .8s linear infinite;
+  vertical-align: middle; margin-left: 6px;
+}
+
+/* Multiplayer sync indicator */
+.sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #6ecfa0; display: inline-block; animation: pulse 2s infinite; }
+.sync-dot.offline { background: var(--platinum-dim); animation: none; }
+
+/* ── QR CODE ── */
+.qr-wrap { background:#fff; border-radius:10px; padding:14px; display:inline-block; }
+
+/* ── SCORECARD MODAL ── */
+.sc-table { width:100%; border-collapse:collapse; }
+.sc-table th { font-size:9px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--gold-dim); padding:7px 8px; text-align:center; border-bottom:1px solid var(--bdr-dim); }
+.sc-table td { font-size:13px; color:var(--platinum); padding:9px 8px; text-align:center; border-bottom:1px solid var(--bdr-dim); }
+.sc-table tr:last-child td { border-bottom:none; }
+.sc-name { font-weight:600; text-align:left !important; }
+.sc-leader { color:var(--gold-light) !important; font-weight:700; }
+
+/* ── RANDOMISER ── */
+.rand-name { font-family:var(--fd); font-size:44px; font-weight:700; color:var(--gold-light); text-align:center; min-height:60px; letter-spacing:2px; text-shadow:0 0 20px rgba(201,168,76,.4); line-height:1.1; }
+.rand-sub { font-size:13px; color:var(--platinum-dim); text-align:center; margin-top:10px; min-height:22px; }
+
+/* ── VIDEO CALL ── */
+.call-panel { position:fixed; bottom:90px; right:10px; z-index:200; display:none; flex-direction:column; gap:6px; max-width:110px; }
+.call-panel.show { display:flex; }
+.call-thumb { width:100px; height:76px; background:#111; border-radius:10px; border:1px solid var(--bdr); object-fit:cover; display:block; }
+.call-thumb.local { transform:scaleX(-1); }
+.call-name-tag { font-size:9px; color:var(--platinum-dim); text-align:center; letter-spacing:1px; margin-top:2px; }
+.call-controls { position:fixed; bottom:10px; right:10px; z-index:201; display:none; flex-direction:column; gap:6px; }
+.call-controls.show { display:flex; }
+.call-btn { width:44px; height:44px; border-radius:50%; border:1px solid var(--bdr); background:var(--obsidian-3); color:var(--platinum); font-size:19px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .2s; box-shadow:0 2px 10px rgba(0,0,0,.3); }
+.call-btn.on { background:rgba(110,207,160,.2); border-color:#6ecfa0; }
+.call-btn.end { background:rgba(139,26,42,.35); border-color:var(--crimson-light); }
+
+/* ── PLAYER STATS ── */
+.stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:8px; }
+.stat-cell { background:var(--obsidian-3); border:1px solid var(--bdr-dim); border-radius:var(--radius-sm); padding:10px 6px; text-align:center; }
+.stat-cell-val { font-family:var(--fd); font-size:20px; font-weight:700; color:var(--gold-light); }
+.stat-cell-lbl { font-size:8px; color:var(--platinum-dim); text-transform:uppercase; letter-spacing:1.5px; margin-top:2px; font-weight:600; }
+.stats-player-name { font-size:10px; font-weight:700; color:var(--gold); letter-spacing:2px; text-transform:uppercase; margin-bottom:7px; }
+
+/* ── CHECKOUT PANEL ── */
+.co-panel { border-radius:var(--radius-sm); padding:11px 15px; margin:0 16px 10px; background:linear-gradient(135deg,rgba(139,26,42,.08),rgba(201,168,76,.05)); border:1px solid rgba(201,168,76,.2); }
+.co-title { font-size:9px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:var(--gold-dim); margin-bottom:8px; }
+.co-route { display:flex; gap:5px; flex-wrap:wrap; align-items:center; }
+.co-dart { background:var(--obsidian); border:1px solid var(--bdr-dim); border-radius:4px; padding:3px 10px; font-size:12px; font-weight:700; color:var(--platinum-dim); letter-spacing:.5px; }
+.co-dart.double { border-color:var(--gold-dim); color:var(--gold-light); }
+.co-dart.treble { border-color:rgba(110,207,160,.5); color:#6ecfa0; }
+.co-dart.bull-dart { border-color:rgba(192,57,43,.5); color:#e74c3c; }
+.co-arrow { color:var(--platinum-dim); font-size:11px; opacity:.35; padding:0 1px; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+<!-- ── OVERLAYS ── -->
+<div class="bust-overlay" id="bust-overlay"><div class="bust-word">BUST!</div></div>
+<div class="toast" id="toast"></div>
+
+<!-- ── SCORECARD MODAL ── -->
+<div class="modal-backdrop" id="scorecard-modal">
+  <div class="modal-sheet">
+    <div class="modal-title">SCORECARD</div>
+    <div style="overflow-x:auto;max-height:58vh;overflow-y:auto;margin-bottom:14px">
+      <table class="sc-table" id="sc-table"></table>
+    </div>
+    <button class="btn btn-secondary" onclick="closeScorecard()">Close</button>
+  </div>
+</div>
+
+<!-- ── RANDOMISER MODAL ── -->
+<div class="modal-backdrop" id="rand-modal">
+  <div class="modal-sheet" style="text-align:center;padding-bottom:24px">
+    <div class="modal-title">WHO THROWS FIRST?</div>
+    <div style="padding:24px 0 16px">
+      <div class="rand-name" id="rand-name">—</div>
+      <div class="rand-sub" id="rand-sub">Deciding...</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn btn-primary" id="rand-reroll-btn" onclick="reroll()" style="display:none">Reroll</button>
+      <button class="btn btn-green" id="rand-start-btn" onclick="confirmRandStart()" style="display:none">Start Game</button>
+      <button class="btn btn-secondary" onclick="skipRand()">Skip — keep order</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── STATS MODAL ── -->
+<div class="modal-backdrop" id="stats-modal">
+  <div class="modal-sheet">
+    <div class="modal-title">PLAYER STATS</div>
+    <div id="stats-content" style="max-height:55vh;overflow-y:auto;margin-bottom:14px"></div>
+    <button class="btn btn-danger btn-sm" onclick="clearStats()" style="margin-bottom:8px;width:auto">Clear All Stats</button>
+    <button class="btn btn-secondary" onclick="document.getElementById('stats-modal').classList.remove('open')">Close</button>
+  </div>
+</div>
+
+<!-- ── MANUAL ENTRY MODAL ── -->
+<div class="modal-backdrop" id="manual-modal">
+  <div class="modal-sheet">
+    <div class="modal-title">MANUAL ENTRY</div>
+    <div class="modal-mod-row">
+      <div class="mod-btn active" id="mm-s" onclick="mmSetMod('S')">Single</div>
+      <div class="mod-btn" id="mm-d" onclick="mmSetMod('D')" style="color:var(--gl)">Double</div>
+      <div class="mod-btn" id="mm-t" onclick="mmSetMod('T')" style="color:var(--amber)">Treble</div>
+    </div>
+    <div class="modal-np" id="modal-numpad"></div>
+    <div class="special-row">
+      <button class="np-btn bull btn" style="flex:1;width:auto" onclick="mmEnter(25,25)">Bull 25</button>
+      <button class="np-btn bull btn" style="flex:1;width:auto" onclick="mmEnter(50,50)">Bull 50</button>
+      <button class="np-btn btn" style="flex:1;width:auto;color:var(--muted)" onclick="mmEnter(0,0)">Miss</button>
+    </div>
+    <button class="btn btn-secondary" style="margin-top:10px" onclick="closeModal()">Done</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     PAGE: HOME
+════════════════════════════════════════════ -->
+<div class="page show" id="page-home">
+  <div class="home-hero">
+    <h1>Pro<span>Darts</span></h1>
+    <div style="font-size:11px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-top:6px">AI Camera · Multiplayer · Live Scoring</div>
+    <div class="dartboard"></div>
+  </div>
+  <div class="scroll">
+    <div class="home-body">
+
+      <!-- Camera permission card -->
+      <div class="cam-permission-card" style="margin-bottom:16px">
+        <div class="cam-permission-inner">
+          <div class="cam-icon-big">📷</div>
+          <div class="cam-perm-title">CAMERA AI SCORING</div>
+          <div class="cam-perm-sub">Point your phone at the board after throwing — AI detects where the darts landed and scores automatically.</div>
+          <div id="cam-status-row" style="display:flex;align-items:center;margin-bottom:12px">
+            <div class="cam-status-dot unknown" id="cam-dot"></div>
+            <span class="cam-status-text" id="cam-status-text">Tap below to enable camera</span>
+          </div>
+          <button class="btn btn-green btn-sm" id="btn-request-cam" onclick="requestCamera()">Enable Camera</button>
+          <button class="btn btn-secondary btn-sm" id="btn-skip-cam" onclick="skipCamera()" style="margin-left:8px">Skip (manual scoring)</button>
+        </div>
+      </div>
+
+      <span class="label">Game Mode</span>
+      <div class="mode-grid">
+        <div class="mode-card selected" id="mc-501" onclick="setMode('501',this)">
+          <div class="mode-icon">🎯</div>
+          <div><div class="mode-name">501</div><div class="mode-desc">Start at 501, finish on a double</div></div>
+        </div>
+        <div class="mode-card" id="mc-301" onclick="setMode('301',this)">
+          <div class="mode-icon">🏹</div>
+          <div><div class="mode-name">301</div><div class="mode-desc">Shorter game</div></div>
+        </div>
+        <div class="mode-card" id="mc-atc" onclick="setMode('atc',this)">
+          <div class="mode-icon">🔄</div>
+          <div><div class="mode-name">Around the Clock</div><div class="mode-desc">Hit 1 through 20 then bull</div></div>
+        </div>
+      </div>
+
+      <span class="label">Players</span>
+      <div class="player-list" id="player-list">
+        <div class="player-row"><div class="player-badge">1</div><input type="text" class="pname" placeholder="Player 1" value="Player 1"></div>
+        <div class="player-row"><div class="player-badge" style="background:var(--ad)">2</div><input type="text" class="pname" placeholder="Player 2" value="Player 2"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <button class="btn btn-secondary btn-sm" onclick="addPlayer()">+ Add player</button>
+        <button class="btn btn-secondary btn-sm" onclick="removePlayer()">− Remove</button>
+      </div>
+
+      <!-- Multiplayer -->
+      <span class="label">Online Multiplayer</span>
+      <div class="mp-section">
+        <div class="mp-row" id="mp-toggle" onclick="toggleMP()">
+          <div>
+            <div class="mp-label">🌐 Play with people elsewhere</div>
+            <div class="mp-sub">Generate a room code — friends join from any device</div>
+          </div>
+          <div class="toggle" id="mp-toggle-switch"></div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="startGame()" style="margin-bottom:10px">START GAME</button>
+      <button class="btn btn-secondary" onclick="showStatsModal()" style="margin-bottom:10px">Player Stats</button>
+      <button class="btn btn-secondary" onclick="goPage('page-join')" style="margin-bottom:20px">Join a friend's game →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     PAGE: CAMERA PERMISSION REQUEST
+════════════════════════════════════════════ -->
+<div class="page" id="page-cam-request">
+  <div class="cam-req-box">
+    <div class="cam-req-icon">📷</div>
+    <div class="cam-req-title">CAMERA ACCESS</div>
+    <div class="cam-req-desc">ProDarts needs access to your camera to see the dartboard and automatically score your darts using AI.</div>
+    <button class="btn btn-primary" onclick="grantCameraAndStart()" style="margin-bottom:10px">Allow Camera & Start</button>
+    <button class="btn btn-secondary" onclick="startWithoutCamera()">Play Without Camera</button>
+    <div class="cam-req-note">Your camera is only used live — no video is recorded or stored. Images are sent to AI only when you tap "Scan".</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     PAGE: LOBBY
+════════════════════════════════════════════ -->
+<div class="page" id="page-lobby">
+  <div class="game-header">
+    <div class="game-mode">LOBBY</div>
+    <div style="margin-left:auto"><div class="sync-dot" id="lobby-sync"></div></div>
+    <button class="btn btn-secondary btn-sm" style="margin-left:8px" onclick="cancelLobby()">Cancel</button>
+  </div>
+  <div class="scroll" style="padding:20px">
+    <div class="lobby-box" style="margin:0 auto">
+      <span class="label">Room Code — share with friends</span>
+      <div class="room-code" id="lobby-code">------</div>
+
+      <div class="copy-link" id="copy-link-box" onclick="copyLink()">
+        <div class="copy-label">Tap to copy shareable link</div>
+        <span id="copy-link-text" style="word-break:break-all"></span>
+      </div>
+
+      <div style="text-align:center;margin-bottom:14px">
+        <div class="qr-wrap" id="qr-code"></div>
+        <div style="font-size:10px;color:var(--platinum-dim);margin-top:6px;letter-spacing:1px">Scan to join</div>
+      </div>
+
+      <button class="btn btn-green" id="btn-start-call" onclick="startCall()" style="margin-bottom:14px">Start Video Call with Friends</button>
+
+      <span class="label">Players in room</span>
+      <div class="lobby-players" id="lobby-players-list"></div>
+
+      <div id="lobby-waiting-msg" style="font-size:13px;color:var(--muted);margin-bottom:16px;text-align:center">Waiting for players to join...</div>
+
+      <button class="btn btn-primary" id="btn-start-from-lobby" onclick="startFromLobby()" disabled style="opacity:.4;margin-bottom:10px">WAITING FOR PLAYERS</button>
+      <button class="btn btn-secondary" onclick="cancelLobby()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     PAGE: CAMERA GAME
+════════════════════════════════════════════ -->
+<div class="page" id="page-camera">
+  <video id="vid" autoplay muted playsinline></video>
+  <canvas id="snap-canvas"></canvas>
+
+  <div class="hud">
+    <div class="hud-top">
+      <div class="hud-logo">Pro<span style="color:var(--gl)">Darts</span></div>
+      <div class="hud-mode" id="hud-mode">501</div>
+      <button class="hud-quit" onclick="openScorecard()" style="margin-right:5px">Stats</button>
+      <button class="hud-quit" onclick="quitGame()">✕ Quit</button>
+    </div>
+    <div class="score-pills" id="score-pills"></div>
+    <div class="round-pill" id="round-pill">Round 1</div>
+
+    <div class="reticle">
+      <svg viewBox="0 0 220 220" fill="none">
+        <circle cx="110" cy="110" r="106" stroke="rgba(82,183,136,.45)" stroke-width="1.5" stroke-dasharray="8 6"/>
+        <circle cx="110" cy="110" r="76" stroke="rgba(82,183,136,.25)" stroke-width="1" stroke-dasharray="4 4"/>
+        <circle cx="110" cy="110" r="40" stroke="rgba(244,165,34,.4)" stroke-width="1"/>
+        <circle cx="110" cy="110" r="14" stroke="rgba(244,165,34,.7)" stroke-width="1.5"/>
+        <line x1="110" y1="2" x2="110" y2="40" stroke="rgba(82,183,136,.55)" stroke-width="1"/>
+        <line x1="110" y1="180" x2="110" y2="218" stroke="rgba(82,183,136,.55)" stroke-width="1"/>
+        <line x1="2" y1="110" x2="40" y2="110" stroke="rgba(82,183,136,.55)" stroke-width="1"/>
+        <line x1="180" y1="110" x2="218" y2="110" stroke="rgba(82,183,136,.55)" stroke-width="1"/>
+        <path d="M18 48L18 18L48 18" stroke="rgba(82,183,136,.8)" stroke-width="2" stroke-linecap="round"/>
+        <path d="M172 18L202 18L202 48" stroke="rgba(82,183,136,.8)" stroke-width="2" stroke-linecap="round"/>
+        <path d="M18 172L18 202L48 202" stroke="rgba(82,183,136,.8)" stroke-width="2" stroke-linecap="round"/>
+        <path d="M172 202L202 202L202 172" stroke="rgba(82,183,136,.8)" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <div class="hud-bottom">
+      <div class="strategy-strip" id="cam-strategy">
+        <div style="font-size:14px;flex-shrink:0;margin-top:1px">🎯</div>
+        <div>
+          <div id="cam-strat-text" style="color:var(--cream)">Loading...</div>
+          <div class="strategy-darts-row" id="cam-strat-darts"></div>
+        </div>
+      </div>
+
+      <div class="dart-slots">
+        <div class="d-slot" id="cs0"><div class="d-slot-label">Dart 1</div><div class="d-slot-val" id="cv0">—</div></div>
+        <div class="d-slot" id="cs1"><div class="d-slot-label">Dart 2</div><div class="d-slot-val" id="cv1">—</div></div>
+        <div class="d-slot" id="cs2"><div class="d-slot-label">Dart 3</div><div class="d-slot-val" id="cv2">—</div></div>
+      </div>
+
+      <div class="turn-row">
+        <div class="turn-group"><div class="turn-small">This turn</div><div class="turn-big" id="cam-turn-total">0</div></div>
+        <div class="turn-group" style="text-align:right"><div class="turn-small">After</div><div class="turn-big" id="cam-remaining">501</div></div>
+      </div>
+
+      <div class="ai-result" id="ai-result">
+        <div class="ai-result-label"><div class="ai-dot" id="ai-dot"></div>AI Detection</div>
+        <div class="ai-result-text" id="ai-result-text">Ready</div>
+      </div>
+
+      <!-- ATC hit/miss buttons -->
+      <div class="atc-actions" id="atc-cam-actions">
+        <button class="btn-hit" onclick="atcHit()">✓ HIT!</button>
+        <button class="btn-miss-sm" onclick="atcMiss()">Miss</button>
+      </div>
+
+      <button class="scan-btn" id="scan-btn" onclick="scanBoard()">
+        <span>📷</span><span id="scan-txt">SCAN BOARD — AI SCORE</span>
+      </button>
+
+      <div class="cam-actions">
+        <button class="btn-undo-cam" onclick="camUndo()">↩ Undo</button>
+        <button class="btn-confirm-cam" id="cam-confirm" onclick="camConfirm()" disabled>CONFIRM</button>
+        <button class="btn-manual-cam" onclick="openModal()">✏️ Manual</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     PAGE: MANUAL GAME
+════════════════════════════════════════════ -->
+<div class="page" id="page-game">
+  <div class="game-header">
+    <div class="game-mode" id="game-mode-label">501</div>
+    <div class="round-badge" id="game-round-label">Round 1</div>
+    <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+      <div class="sync-dot offline" id="game-sync-dot" title="Multiplayer sync"></div>
+      <button class="btn btn-secondary btn-sm" onclick="openScorecard()">Stats</button>
+      <button class="btn btn-secondary btn-sm" onclick="quitGame()">Quit</button>
+    </div>
+  </div>
+  <div class="players-tabs" id="players-tabs"></div>
+  <div class="leg-banner" id="leg-banner"></div>
+  <div class="scroll" id="game-scroll">
+    <!-- ATC board -->
+    <div id="atc-section" style="display:none">
+      <div class="atc-board" id="atc-board"></div>
+      <div class="score-entry">
+        <div class="turn-label">▶ <span id="atc-player-name">Player 1</span> — Hit <span id="atc-target" style="color:var(--amber)">1</span></div>
+        <div class="dart-row" id="atc-dart-row">
+          <div class="dart-box" id="aD0"><div class="dart-box-label">Dart 1</div><div class="dart-box-val" id="aDv0">—</div></div>
+          <div class="dart-box" id="aD1"><div class="dart-box-label">Dart 2</div><div class="dart-box-val" id="aDv1">—</div></div>
+          <div class="dart-box" id="aD2"><div class="dart-box-label">Dart 3</div><div class="dart-box-val" id="aDv2">—</div></div>
+        </div>
+        <div class="action-row" style="margin-top:8px">
+          <button class="btn-undo-g" onclick="atcUndo()">↩ Undo</button>
+          <button class="btn-hit" style="flex:2" onclick="atcHit()">✓ HIT!</button>
+          <button class="btn-miss-sm" style="flex:1" onclick="atcMiss()">Miss</button>
+        </div>
+      </div>
+      <div class="strategy" style="margin-bottom:10px"><div class="strategy-title">💡 Tip</div><div class="strategy-text" id="atc-tip">Aim for segment 1.</div></div>
+    </div>
+
+    <!-- X01 entry -->
+    <div id="x01-section" style="display:none">
+      <div class="score-entry">
+        <div class="turn-label">▶ <span id="x01-player-name">Player 1</span>'s Turn</div>
+        <div class="dart-row">
+          <div class="dart-box" id="xD0"><div class="dart-box-label">Dart 1</div><div class="dart-box-val" id="xDv0">—</div></div>
+          <div class="dart-box" id="xD1"><div class="dart-box-label">Dart 2</div><div class="dart-box-val" id="xDv1">—</div></div>
+          <div class="dart-box" id="xD2"><div class="dart-box-label">Dart 3</div><div class="dart-box-val" id="xDv2">—</div></div>
+        </div>
+        <div class="score-totals">
+          <div><div class="stot-label">Turn total</div><div class="stot-val" id="x-turn-tot">0</div></div>
+          <div style="text-align:right"><div class="stot-label">After</div><div class="stot-val" id="x-after" style="color:var(--gl)">501</div></div>
+        </div>
+      </div>
+      <div class="numpad-section">
+        <div class="mod-row">
+          <button class="mod-btn active" id="mod-s" onclick="setMod('S')">Single</button>
+          <button class="mod-btn" id="mod-d" onclick="setMod('D')" style="color:var(--gl)">Double</button>
+          <button class="mod-btn" id="mod-t" onclick="setMod('T')" style="color:var(--amber)">Treble</button>
+        </div>
+        <div class="numpad" id="main-numpad"></div>
+        <div class="special-row">
+          <button class="np-btn bull" style="flex:1" onclick="enterScore(25,1)">Bull 25</button>
+          <button class="np-btn bull" style="flex:1" onclick="enterScore(50,1)">Bull 50</button>
+          <button class="np-btn" style="flex:1;color:var(--muted)" onclick="enterScore(0,1)">Miss</button>
+        </div>
+        <div class="action-row">
+          <button class="btn-undo-g" onclick="undoScore()">↩ Undo</button>
+          <button class="btn-confirm-g" id="btn-confirm-g" onclick="confirmTurn()" disabled>CONFIRM TURN</button>
+        </div>
+      </div>
+      <div class="co-panel" id="co-panel" style="display:none"></div>
+      <div class="strategy" id="strategy-panel">
+        <div class="strategy-title">Strategy</div>
+        <div class="strategy-text" id="strat-text">Loading...</div>
+        <div class="strategy-darts" id="strat-darts"></div>
+      </div>
+    </div>
+
+    <div class="history"><div class="hist-label">Recent Turns</div><div id="history-list"></div></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     PAGE: WIN
+════════════════════════════════════════════ -->
+<div class="page" id="page-win">
+  <div class="win-trophy">🏆</div>
+  <div class="win-title">WINNER!</div>
+  <div class="win-player" id="win-name">Player 1</div>
+  <div class="win-stats">
+    <div class="win-stat"><div class="win-stat-val" id="win-rounds">—</div><div class="win-stat-label">Rounds</div></div>
+    <div class="win-stat"><div class="win-stat-val" id="win-avg">—</div><div class="win-stat-label">Avg/turn</div></div>
+    <div class="win-stat"><div class="win-stat-val" id="win-high">—</div><div class="win-stat-label">Best turn</div></div>
+  </div>
+  <div class="ai-summary">
+    <div class="ai-sum-label"><div class="ai-dot done"></div>Match Summary</div>
+    <div id="win-ai-text">Generating...</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:380px">
+    <button class="btn btn-primary" onclick="rematch()">REMATCH</button>
+    <button class="btn btn-secondary" onclick="goPage('page-home')">New Game</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     PAGE: JOIN
+════════════════════════════════════════════ -->
+<div class="page" id="page-join">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:24px">
+    <div class="join-box">
+      <div style="font-family:var(--fd);font-size:32px;color:var(--amber);letter-spacing:3px;margin-bottom:6px">JOIN GAME</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:20px">Enter the room code from your host</div>
+      <input type="text" id="join-code-input" placeholder="ROOM CODE" maxlength="6" style="text-align:center;font-size:26px;letter-spacing:8px;margin-bottom:10px;text-transform:uppercase">
+      <input type="text" id="join-name-input" placeholder="Your name" style="margin-bottom:16px">
+      <button class="btn btn-primary" onclick="joinRoom()" style="margin-bottom:10px">JOIN GAME</button>
+      <button class="btn btn-secondary" onclick="goPage('page-home')">← Back</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════
+//  PRODARTS — Web App Client
+//  Real-time multiplayer via WebSocket server.
+//  Camera AI scoring via Anthropic Vision API.
+// ════════════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════════
+const G = {
+  mode: '501',
+  players: [],
+  cur: 0,
+  round: 1,
+  darts: [],
+  atcDarts: [],
+  mod: 'S',
+  mmMod: 'S',
+  history: [],
+  camStream: null,
+  camGranted: false,
+  useCam: false,
+  isMP: false,
+  isHost: false,
+  roomCode: null,
+  ws: null,            // WebSocket connection
+  myName: null,
+};
+
+// ════════════════════════════════════════════════════════
+//  WEBSOCKET MULTIPLAYER
+// ════════════════════════════════════════════════════════
+function connectWS(roomCode, playerName, onReady) {
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const url = `${proto}//${location.host}`;
+  const ws = new WebSocket(url);
+  G.ws = ws;
+  G.myName = playerName;
+
+  let opened = false;
+
+  ws.onopen = () => {
+    opened = true;
+    wsSend({ type: 'join', code: roomCode, name: playerName, mode: G.mode });
+  };
+
+  ws.onmessage = (e) => {
+    let msg;
+    try { msg = JSON.parse(e.data); } catch { return; }
+    handleWSMessage(msg, onReady);
+  };
+
+  ws.onerror = () => {
+    if (!opened) showToast('Connection failed — check your network');
+  };
+
+  ws.onclose = () => {
+    if (G.isMP) {
+      const dot = document.getElementById('game-sync-dot');
+      if (dot) dot.classList.add('offline');
+    }
+  };
+
+  // Keepalive ping every 25s
+  const ping = setInterval(() => {
+    if (ws.readyState === WebSocket.OPEN) wsSend({ type: 'ping' });
+    else clearInterval(ping);
+  }, 25000);
+}
+
+function wsSend(msg) {
+  if (G.ws && G.ws.readyState === WebSocket.OPEN) {
+    G.ws.send(JSON.stringify(msg));
+  }
+}
+
+function handleWSMessage(msg, onReady) {
+  switch (msg.type) {
+
+    case 'state':
+      // Received full state snapshot — sync local game
+      if (msg.state.players) G.players = msg.state.players;
+      if (msg.state.cur !== undefined) G.cur = msg.state.cur;
+      if (msg.state.round !== undefined) G.round = msg.state.round;
+      if (msg.state.history) G.history = msg.state.history;
+      if (msg.state.mode) G.mode = msg.state.mode;
+      if (onReady) { onReady(msg.state); return; } // first state = game ready
+      refreshCurrentView();
+      break;
+
+    case 'player_joined':
+      if (msg.players) G.players = msg.players;
+      updateLobbyPlayers();
+      const btn = document.getElementById('btn-start-from-lobby');
+      if (G.players.length >= 2 && G.isHost) {
+        btn.disabled = false; btn.style.opacity = '1';
+        btn.textContent = `START — ${G.players.length} PLAYERS`;
+        document.getElementById('lobby-waiting-msg').textContent = `${G.players.length} players ready!`;
+      }
+      showToast(`${msg.name} joined the room`);
+      break;
+
+    case 'start':
+      // Host started — joiners enter game
+      if (!G.isHost) {
+        G.mode = msg.state.mode;
+        G.players = msg.state.players;
+        G.cur = 0; G.round = 1; G.history = []; G.darts = []; G.atcDarts = [];
+        buildNumpad(); buildModalNumpad();
+        if (G.useCam && G.camGranted) startCameraGame(); else startManualGame();
+      }
+      break;
+
+    case 'player_left':
+      showToast(`${msg.name} left the game`);
+      break;
+
+    case 'webrtc_offer':
+      handleWebRTCOffer(msg).catch(() => {});
+      break;
+    case 'webrtc_answer': {
+      const pc = peers[msg.from];
+      if (pc) pc.setRemoteDescription(new RTCSessionDescription(msg.answer)).catch(() => {});
+      break;
+    }
+    case 'webrtc_ice': {
+      const pc = peers[msg.from];
+      if (pc && msg.candidate) pc.addIceCandidate(new RTCIceCandidate(msg.candidate)).catch(() => {});
+      break;
+    }
+  }
+}
+
+function refreshCurrentView() {
+  const syncDot = document.getElementById('game-sync-dot');
+  if (syncDot) syncDot.classList.remove('offline');
+  if (G.useCam) {
+    updateCamPills(); updateCamRound();
+  } else {
+    updatePlayerTabs(); updateGameRound(); renderHistory();
+    if (G.mode === 'atc') updateATCView(); else updateX01View();
+  }
+  showToast('🔄 Synced with host');
+}
+
+function syncState() {
+  if (!G.isMP || !G.isHost) return; // only host pushes state
+  wsSend({
+    type: 'state_update',
+    state: {
+      players: G.players,
+      cur: G.cur,
+      round: G.round,
+      history: G.history,
+      mode: G.mode,
+      status: 'playing'
+    }
+  });
+}
+
+const CO = {170:['T20','T20','Bull'],167:['T20','T19','Bull'],164:['T20','T18','Bull'],161:['T20','T17','Bull'],160:['T20','T20','D20'],158:['T20','T20','D19'],157:['T20','T19','D20'],156:['T20','T20','D18'],155:['T20','T19','D19'],154:['T20','T18','D20'],153:['T20','T19','D18'],152:['T20','T20','D16'],151:['T20','T17','D20'],150:['T20','T18','D18'],149:['T20','T19','D16'],148:['T20','T16','D20'],147:['T20','T17','D18'],146:['T20','T18','D16'],145:['T20','T15','D20'],144:['T20','T20','D12'],143:['T20','T17','D16'],142:['T20','T14','D20'],141:['T20','T15','D18'],140:['T20','T20','D10'],139:['T20','T13','D20'],138:['T20','T18','D12'],137:['T20','T15','D16'],136:['T20','T20','D8'],135:['T20','T15','D15'],134:['T20','T14','D16'],133:['T20','T19','D8'],132:['T20','T16','D12'],131:['T20','T13','D16'],130:['T20','T18','D8'],129:['T19','T16','D12'],128:['T18','T14','D16'],127:['T20','T17','D8'],126:['T19','T19','D6'],125:['T20','T15','D10'],124:['T20','T16','D8'],123:['T19','T16','D9'],122:['T18','T16','D7'],121:['T20','T11','D14'],120:['T20','S20','D20'],119:['T19','T12','D13'],118:['T20','S18','D20'],117:['T20','S17','D20'],116:['T20','S16','D20'],115:['T20','S15','D20'],114:['T20','S14','D20'],113:['T20','S13','D20'],112:['T20','S12','D20'],111:['T20','S11','D20'],110:['T20','S10','D20'],109:['T20','S9','D20'],108:['T20','S8','D20'],107:['T19','S10','D20'],106:['T20','S6','D20'],105:['T20','S5','D20'],104:['T18','S10','D20'],103:['T19','S6','D20'],102:['T20','S2','D20'],101:['T17','S10','D20'],100:['T20','D20'],99:['T19','S10','D16'],98:['T20','D19'],97:['T19','D20'],96:['T20','D18'],95:['T19','D19'],94:['T18','D20'],93:['T19','D18'],92:['T20','D16'],91:['T17','D20'],90:['T18','D18'],89:['T19','D16'],88:['T16','D20'],87:['T17','D18'],86:['T18','D16'],85:['T15','D20'],84:['T16','D18'],83:['T17','D16'],82:['T14','D20'],81:['T19','D12'],80:['T16','D16'],79:['T13','D20'],78:['T18','D12'],77:['T19','D10'],76:['T20','D8'],75:['T17','D12'],74:['T14','D16'],73:['T19','D8'],72:['T16','D12'],71:['T13','D16'],70:['T18','D8'],69:['T19','D6'],68:['T20','D4'],67:['T17','D8'],66:['T10','D18'],65:['T11','D16'],64:['T16','D8'],63:['T13','D12'],62:['T10','D16'],61:['T15','D8'],60:['S20','D20'],59:['S19','D20'],58:['S18','D20'],57:['S17','D20'],56:['S16','D20'],55:['S15','D20'],54:['S14','D20'],53:['S13','D20'],52:['S12','D20'],51:['S11','D20'],50:['S10','D20'],49:['S9','D20'],48:['S8','D20'],47:['S15','D16'],46:['S6','D20'],45:['S5','D20'],44:['S4','D20'],43:['S3','D20'],42:['S2','D20'],41:['S9','D16'],40:['D20'],39:['S7','D16'],38:['D19'],37:['S5','D16'],36:['D18'],35:['S3','D16'],34:['D17'],33:['S1','D16'],32:['D16'],31:['S15','D8'],30:['D15'],28:['D14'],26:['D13'],24:['D12'],22:['D11'],20:['D10'],18:['D9'],16:['D8'],14:['D7'],12:['D6'],10:['D5'],8:['D4'],6:['D3'],4:['D2'],2:['D1']};
+
+// ════════════════════════════════════════════════════════
+//  UTILS
+// ════════════════════════════════════════════════════════
+function goPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('show'));
+  document.getElementById(id).classList.add('show');
+  window.scrollTo(0,0);
+}
+function showToast(msg, dur=2800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+function showBust() {
+  playSound('bust');
+  const b = document.getElementById('bust-overlay');
+  b.classList.add('show');
+  setTimeout(() => b.classList.remove('show'), 900);
+}
+function genCode() {
+  return Math.random().toString(36).substr(2,6).toUpperCase().replace(/[0OIL]/g, 'X');
+}
+function parseDartLabel(lbl) {
+  if (!lbl || lbl === 'Miss') return { val: 0, label: 'Miss', mult: 1 };
+  if (lbl === 'Bull' || lbl === 'S25') return { val: 25, label: 'Bull', mult: 1 };
+  if (lbl === 'Bullseye' || lbl === 'D25') return { val: 50, label: 'Bullseye', mult: 2 };
+  const m = lbl.match(/^([TDS]?)(\d+)$/);
+  if (!m) return { val: 0, label: 'Miss', mult: 1 };
+  const mult = m[1]==='T'?3:m[1]==='D'?2:1;
+  const num = parseInt(m[2]);
+  return { val: num*mult, label: lbl, mult };
+}
+function getStrategy(score) {
+  if (score > 170) return { text: 'Score maximum — aim T20 every dart.', darts: ['T20','T20','T19'] };
+  if (CO[score]) return { text: 'Checkout in this visit!', darts: CO[score] };
+  if (score <= 40 && score % 2 === 0) return { text: `D${score/2} to finish!`, darts: [`D${score/2}`] };
+  // Fix 10: odd scores under 40 need a setup dart to make them even
+  if (score <= 41 && score % 2 === 1) {
+    const setup = score - 32; // get to D16 (32)
+    if (setup > 0 && setup <= 20) return { text: `Hit S${setup} first to set up D16.`, darts: [`S${setup}`, 'D16'] };
+    return { text: `Hit S1 to set up an even double.`, darts: ['S1', `D${Math.floor((score-1)/2)}`] };
+  }
+  const needed = score - 40;
+  if (needed > 0 && needed <= 60) {
+    const dart = needed <= 20 ? `S${needed}` : `T${Math.min(20, Math.round(needed/3))}`;
+    return { text: `Reduce to 40 for D20. Hit ${needed} first.`, darts: [dart, 'D20'] };
+  }
+  return { text: 'Score big. T20 = 60 pts per turn.', darts: ['T20', 'T19'] };
+}
+
+// ════════════════════════════════════════════════════════
+//  CAMERA PERMISSION  (key fix — ask BEFORE starting)
+// ════════════════════════════════════════════════════════
+let camPermState = 'unknown'; // 'unknown' | 'granted' | 'denied'
+
+async function requestCamera() {
+  const dot = document.getElementById('cam-dot');
+  const txt = document.getElementById('cam-status-text');
+  dot.className = 'cam-status-dot unknown';
+  txt.textContent = 'Requesting camera access...';
+  try {
+    // Request camera NOW while user is on home screen — this triggers the browser permission prompt
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 } }
+    });
+    // Keep the stream ready
+    G.camStream = stream;
+    G.camGranted = true;
+    G.useCam = true;
+    camPermState = 'granted';
+    dot.className = 'cam-status-dot granted';
+    txt.textContent = 'Camera ready ✓';
+    document.getElementById('btn-request-cam').textContent = 'Camera enabled ✓';
+    document.getElementById('btn-request-cam').disabled = true;
+    showToast('📷 Camera ready! AI scoring enabled.');
+  } catch (err) {
+    camPermState = 'denied';
+    G.camGranted = false;
+    G.useCam = false;
+    dot.className = 'cam-status-dot denied';
+    if (err.name === 'NotAllowedError') {
+      txt.textContent = 'Camera blocked — manual scoring only';
+      showToast('Camera permission denied. Using manual scoring.');
+    } else if (err.name === 'NotFoundError') {
+      txt.textContent = 'No camera found on this device';
+      showToast('No camera found.');
+    } else {
+      txt.textContent = 'Camera unavailable — manual scoring only';
+      showToast('Camera unavailable: ' + err.message);
+    }
+  }
+}
+
+function skipCamera() {
+  G.useCam = false;
+  G.camGranted = false;
+  const dot = document.getElementById('cam-dot');
+  const txt = document.getElementById('cam-status-text');
+  dot.className = 'cam-status-dot denied';
+  txt.textContent = 'Manual scoring mode';
+  showToast('Using manual score entry.');
+}
+
+// Called from camera-request page
+async function grantCameraAndStart() {
+  await requestCamera();
+  if (G.camGranted) {
+    beginGame();
+  } else {
+    startWithoutCamera();
+  }
+}
+function startWithoutCamera() {
+  G.useCam = false;
+  beginGame();
+}
+
+// ════════════════════════════════════════════════════════
+//  HOME
+// ════════════════════════════════════════════════════════
+function setMode(m, el) {
+  G.mode = m;
+  document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+let mpEnabled = false;
+function toggleMP() {
+  mpEnabled = !mpEnabled;
+  const sw = document.getElementById('mp-toggle-switch');
+  const row = document.getElementById('mp-toggle');
+  sw.classList.toggle('on', mpEnabled);
+  row.classList.toggle('on', mpEnabled);
+}
+
+function addPlayer() {
+  const rows = document.querySelectorAll('#player-list .player-row');
+  if (rows.length >= 6) { showToast('Maximum 6 players'); return; }
+  const n = rows.length + 1;
+  const colors = ['var(--gm)','var(--ad)','#6c3483','#1a5276','#145a32','#7b241c'];
+  const div = document.createElement('div');
+  div.className = 'player-row';
+  div.innerHTML = `<div class="player-badge" style="background:${colors[n-1]}">${n}</div><input type="text" class="pname" placeholder="Player ${n}" value="Player ${n}">`;
+  document.getElementById('player-list').appendChild(div);
+}
+function removePlayer() {
+  const rows = document.querySelectorAll('#player-list .player-row');
+  if (rows.length <= 1) { showToast('Need at least 1 player'); return; }
+  rows[rows.length-1].remove();
+}
+
+function startGame() {
+  const names = [...document.querySelectorAll('.pname')].map(i => i.value.trim() || 'Player');
+  G.players = names.map(name => ({
+    name, score: parseInt(G.mode) || 501, legs: 0,
+    atcTarget: 1, atcHits: Array(22).fill(false),
+    totalScore: 0, turnCount: 0, highTurn: 0
+  }));
+  G.cur = 0; G.round = 1; G.history = []; G.darts = []; G.atcDarts = [];
+
+  if (mpEnabled) {
+    setupMultiplayer();
+    return;
+  }
+
+  showRandomiser();
+}
+
+function proceedAfterRand() {
+  if (!G.camGranted && camPermState === 'unknown') {
+    goPage('page-cam-request');
+    return;
+  }
+  beginGame();
+}
+
+function beginGame() {
+  buildNumpad();
+  buildModalNumpad();
+  if (G.useCam && G.camGranted) {
+    startCameraGame();
+  } else {
+    startManualGame();
+  }
+}
+
+// ════════════════════════════════════════════════════════
+//  MULTIPLAYER — WebSocket real-time
+// ════════════════════════════════════════════════════════
+let mpPollInterval = null; // kept for compat, unused
+
+function setupMultiplayer() {
+  G.isMP = true;
+  G.isHost = true;
+
+  fetch('/api/room/create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mode: G.mode, players: G.players })
+  })
+  .then(r => r.json())
+  .then(({ code }) => {
+    G.roomCode = code;
+    document.getElementById('lobby-code').textContent = code;
+    document.getElementById('copy-link-text').textContent = buildShareURL(code);
+    generateQR(buildShareURL(code));
+    updateLobbyPlayers();
+    goPage('page-lobby');
+    connectWS(code, G.players[0]?.name || 'Host', null);
+  })
+  .catch(() => showToast('Could not create room — check connection'));
+}
+
+function buildShareURL(code) {
+  return `${location.origin}/?room=${code}`;
+}
+
+function saveRoomState() {}   // no-op — state managed server-side via WS
+
+function updateLobbyPlayers() {
+  document.getElementById('lobby-players-list').innerHTML = G.players.map((p, i) => `
+    <div class="lobby-player-row">
+      <div class="online-dot"></div>
+      <div class="lobby-player-name">${p.name}</div>
+      ${i===0?'<div class="host-badge">HOST</div>':'<div style="margin-left:auto;font-size:11px;color:var(--muted)">JOINED</div>'}
+    </div>`).join('');
+}
+
+function copyLink() {
+  const url = buildShareURL(G.roomCode);
+  navigator.clipboard.writeText(url)
+    .then(() => showToast('📋 Link copied! Send to your friends.'))
+    .catch(() => showToast('Share: ' + url, 5000));
+}
+
+function cancelLobby() {
+  if (G.ws) { G.ws.close(); G.ws = null; }
+  goPage('page-home');
+}
+
+function startFromLobby() {
+  wsSend({ type: 'start', state: { mode: G.mode, players: G.players } });
+  beginGame();
+}
+
+function checkForJoiners() {} // handled by WS player_joined
+
+function joinRoom() {
+  const code = document.getElementById('join-code-input').value.trim().toUpperCase();
+  const name = document.getElementById('join-name-input').value.trim() || 'Guest';
+  if (code.length < 4) { showToast('Enter a valid room code'); return; }
+
+  G.isHost = false;
+  G.isMP = true;
+  G.roomCode = code;
+  G.myName = name;
+
+  showToast(`Joining room ${code}...`);
+
+  connectWS(code, name, (state) => {
+    G.mode = state.mode || '501';
+    G.players = state.players || [];
+    G.cur = state.cur || 0;
+    G.round = state.round || 1;
+    G.history = state.history || [];
+
+    if (state.status === 'playing') {
+      G.darts = []; G.atcDarts = [];
+      showToast(`Joined ${code}! Game in progress.`);
+      buildNumpad(); buildModalNumpad();
+      if (G.useCam && G.camGranted) startCameraGame(); else startManualGame();
+    } else {
+      document.getElementById('lobby-code').textContent = code;
+      document.getElementById('copy-link-text').textContent = buildShareURL(code);
+      updateLobbyPlayers();
+      document.getElementById('lobby-waiting-msg').textContent = 'Waiting for host to start...';
+      document.getElementById('btn-start-from-lobby').style.display = 'none';
+      goPage('page-lobby');
+      showToast(`Joined room ${code}!`);
+    }
+  });
+}
+
+// ════════════════════════════════════════════════════════
+//  CAMERA GAME
+// ════════════════════════════════════════════════════════
+function startCameraGame() {
+  document.getElementById('hud-mode').textContent = G.mode === 'atc' ? 'CLOCK' : G.mode;
+  const isATC = G.mode === 'atc';
+  document.getElementById('atc-cam-actions').classList.toggle('show', isATC);
+  document.getElementById('scan-btn').style.display = isATC ? 'none' : '';
+  document.getElementById('cam-strategy').style.display = isATC ? 'none' : '';
+  buildCamPills();
+  updateCamRound();
+  resetCamDarts();
+
+  // Attach stream to video element
+  const vid = document.getElementById('vid');
+  vid.srcObject = G.camStream;
+  vid.play().catch(() => {});
+
+  goPage('page-camera');
+}
+
+function buildCamPills() {
+  document.getElementById('score-pills').innerHTML = G.players.map((p, i) => `
+    <div class="pill ${i===G.cur?'active':''}" id="pill-${i}">
+      <div class="pill-name">${p.name}</div>
+      <div class="pill-score" id="pill-score-${i}">${G.mode==='atc'?(p.atcTarget>20?'🎯':p.atcTarget):p.score}</div>
+      <div class="pill-legs">${p.legs}L</div>
+    </div>`).join('');
+}
+function updateCamPills() {
+  G.players.forEach((p, i) => {
+    const el = document.getElementById(`pill-${i}`);
+    if (!el) return;
+    el.classList.toggle('active', i === G.cur);
+    const s = document.getElementById(`pill-score-${i}`);
+    if (s) s.textContent = G.mode==='atc'?(p.atcTarget>20?'🎯':p.atcTarget):p.score;
+    el.querySelector('.pill-legs').textContent = `${p.legs}L`;
+  });
+}
+function updateCamRound() { document.getElementById('round-pill').textContent = `Round ${G.round}`; }
+
+function resetCamDarts() {
+  G.darts = [];
+  for (let i = 0; i < 3; i++) {
+    document.getElementById(`cv${i}`).textContent = '—';
+    document.getElementById(`cs${i}`).classList.remove('filled');
+  }
+  const p = G.players[G.cur];
+  document.getElementById('cam-turn-total').textContent = '0';
+  document.getElementById('cam-turn-total').className = 'turn-big';
+  const rem = document.getElementById('cam-remaining');
+  rem.textContent = G.mode==='atc'?(p.atcTarget>20?'Bull':p.atcTarget):p.score;
+  rem.className = 'turn-big';
+  document.getElementById('cam-confirm').disabled = true;
+  document.getElementById('ai-result').classList.remove('show');
+  updateCamStrategy();
+}
+
+function updateCamTotals() {
+  const tot = G.darts.reduce((s,d) => s+d.val, 0);
+  document.getElementById('cam-turn-total').textContent = tot;
+  const p = G.players[G.cur];
+  const after = p.score - tot;
+  const rem = document.getElementById('cam-remaining');
+  if (after < 0 || after === 1) { rem.textContent = 'BUST'; rem.className = 'turn-big bust'; }
+  else if (after <= 40) { rem.textContent = after; rem.className = 'turn-big danger'; }
+  else { rem.textContent = after; rem.className = 'turn-big'; }
+}
+
+function updateCamStrategy() {
+  const p = G.players[G.cur];
+  if (!p || G.mode === 'atc') return;
+  const s = getStrategy(p.score);
+  document.getElementById('cam-strat-text').textContent = s.text;
+  document.getElementById('cam-strat-darts').innerHTML = s.darts.map((d, i) =>
+    `<span class="s-dart ${i===s.darts.length-1?'key':''}">${d}</span>`).join('');
+}
+
+// ── AI SCAN ───────────────────────────────────────────
+async function scanBoard() {
+  if (!G.camStream) { showToast('Camera not active'); return; }
+  const btn = document.getElementById('scan-btn');
+  const txt = document.getElementById('scan-txt');
+  btn.classList.add('scanning');
+  txt.innerHTML = 'ANALYSING...<span class="spin"></span>';
+
+  const vid = document.getElementById('vid');
+  const can = document.getElementById('snap-canvas');
+  const ctx = can.getContext('2d');
+  can.width = vid.videoWidth || 1280;
+  can.height = vid.videoHeight || 720;
+  ctx.drawImage(vid, 0, 0, can.width, can.height);
+  const imgData = can.toDataURL('image/jpeg', 0.92).split(',')[1];
+
+  const p = G.players[G.cur];
+  showAIResult('Scanning board...<span class="spin"></span>');
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 600,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imgData } },
+            { type: 'text', text: `You are a darts scoring AI. Analyse this dartboard photo carefully.
+
+Game: ${G.mode} | Player: ${p.name} | Score left: ${p.score}
+
+Look for dart shafts, flights, or tips in the board. Identify each dart's segment (1-20, Bull, Bullseye) and ring (single/double/treble).
+
+Return ONLY valid JSON, no markdown, no explanation:
+{"darts":["T20","S5","D16"],"total":75,"confidence":"high","bust":false,"desc":"Brief description","tip":"Next move advice"}
+
+confidence: "high"=darts clearly visible, "medium"=partially visible, "low"=no darts or board not clear.
+If no darts: {"darts":[],"total":0,"confidence":"low","bust":false,"desc":"No darts detected","tip":""}
+bust: true if total > ${p.score} or total === ${p.score === 2 ? 1 : p.score-1}` }
+          ]
+        }]
+      })
+    });
+
+    const data = await res.json();
+    const raw = data.content?.[0]?.text || '{}';
+    let parsed;
+    try { parsed = JSON.parse(raw.replace(/```json|```/g, '').trim()); }
+    catch { parsed = { darts: [], confidence: 'low', desc: 'Could not parse response.', tip: '' }; }
+
+    btn.classList.remove('scanning');
+    txt.textContent = 'SCAN BOARD — AI SCORE';
+
+    if (parsed.confidence === 'low' || !parsed.darts?.length) {
+      showAIResult(`<strong>Board not visible.</strong> ${parsed.desc || 'Move camera closer to the board.'}`, true);
+      showToast('Move camera closer to the board');
+    } else {
+      // Fill dart slots
+      G.darts = [];
+      for (let i = 0; i < 3; i++) {
+        document.getElementById(`cv${i}`).textContent = '—';
+        document.getElementById(`cs${i}`).classList.remove('filled');
+      }
+      parsed.darts.slice(0, 3).forEach((dl, i) => {
+        const d = parseDartLabel(dl);
+        G.darts.push(d);
+        document.getElementById(`cv${i}`).textContent = d.val === 0 ? 'Miss' : d.label;
+        document.getElementById(`cs${i}`).classList.add('filled');
+      });
+      updateCamTotals();
+      const tot = G.darts.reduce((s,d) => s+d.val, 0);
+      const after = p.score - tot;
+      const isBust = after < 0 || after === 1;
+      showAIResult(
+        `<strong>${parsed.darts.join(' · ')}</strong> = ${parsed.total} pts${isBust?` — <span style="color:#e74c3c">BUST!</span>`:''}` +
+        `<br>${parsed.desc}${parsed.tip?'<br>🎯 '+parsed.tip:''}`, true);
+      if (G.darts.length > 0) document.getElementById('cam-confirm').disabled = false;
+      showToast(parsed.confidence === 'medium' ? '⚠ Medium confidence — verify before confirming' : '✓ Detected! Confirm or adjust.');
+    }
+  } catch(err) {
+    btn.classList.remove('scanning');
+    txt.textContent = 'SCAN BOARD — AI SCORE';
+    showAIResult(`AI error: ${err.message}. Use ✏️ manual entry.`, true);
+    showToast('AI unavailable — tap ✏️ to enter manually');
+  }
+}
+
+function showAIResult(html, done=false) {
+  const el = document.getElementById('ai-result');
+  el.classList.add('show');
+  document.getElementById('ai-result-text').innerHTML = html;
+  document.getElementById('ai-dot').className = 'ai-dot' + (done ? ' done' : '');
+}
+
+function camConfirm() {
+  if (G.mode === 'atc') return;
+  const p = G.players[G.cur];
+  const tot = G.darts.reduce((s,d) => s+d.val, 0);
+  const after = p.score - tot;
+  // Bust checks
+  if (after < 0 || after === 1) { showBust(); addHistory(p.name, G.darts, tot, p.score, p.score); camNext(); return; }
+  if (after === 0) {
+    const last = G.darts[G.darts.length-1];
+    if (last.mult !== 2 && last.val !== 50) { showBust(); addHistory(p.name, G.darts, tot, p.score, p.score); camNext(); return; }
+  }
+  // Valid score
+  p.score = after; p.totalScore += tot; p.turnCount++; p.highTurn = Math.max(p.highTurn, tot);
+  addHistory(p.name, G.darts, tot, p.score+tot, after);
+  syncState();
+  updateCamPills();
+  if (after === 0) { p.legs++; handleWin(p); return; } // Fix 3: return before camNext so win isn't skipped
+  camNext();
+}
+function camUndo() {
+  if (!G.darts.length) return;
+  const i = G.darts.length-1;
+  G.darts.pop();
+  document.getElementById(`cv${i}`).textContent = '—';
+  document.getElementById(`cs${i}`).classList.remove('filled');
+  document.getElementById('cam-confirm').disabled = true;
+  updateCamTotals();
+}
+function camNext() {
+  G.cur = (G.cur+1) % G.players.length;
+  if (G.cur === 0) { G.round++; updateCamRound(); }
+  updateCamPills();
+  if (G.mode === 'atc') {
+    // Fix 13: ATC camera mode - reset dart slots without reading p.score
+    G.darts = [];
+    for (let i = 0; i < 3; i++) {
+      document.getElementById(`cv${i}`).textContent = '—';
+      document.getElementById(`cs${i}`).classList.remove('filled');
+    }
+    const p = G.players[G.cur];
+    document.getElementById('cam-remaining').textContent = p.atcTarget > 20 ? 'Bull' : p.atcTarget;
+    document.getElementById('cam-remaining').className = 'turn-big';
+    document.getElementById('cam-turn-total').textContent = '0';
+    document.getElementById('cam-confirm').disabled = true;
+    document.getElementById('ai-result').classList.remove('show');
+  } else {
+    resetCamDarts();
+  }
+}
+
+function quitGame() {
+  if (confirm('Quit the current game?')) {
+    stopCam();
+    if (G.ws) { G.ws.close(); G.ws = null; }
+    goPage('page-home');
+  }
+}
+function stopCam() {
+  if (G.camStream) {
+    // Don't stop the tracks — keep permission alive for next game
+    // Just detach from video element
+    const vid = document.getElementById('vid');
+    if (vid) vid.srcObject = null;
+  }
+}
+
+// ════════════════════════════════════════════════════════
+//  MANUAL GAME
+// ════════════════════════════════════════════════════════
+function startManualGame() {
+  G.darts = []; G.atcDarts = [];
+  buildPlayerTabs();
+  document.getElementById('game-mode-label').textContent = G.mode === 'atc' ? 'AROUND THE CLOCK' : G.mode;
+  updateGameRound();
+  document.getElementById('atc-section').style.display = G.mode === 'atc' ? '' : 'none';
+  document.getElementById('x01-section').style.display = G.mode !== 'atc' ? '' : 'none';
+  if (G.mode === 'atc') { buildATCBoard(); updateATCView(); }
+  else { updateX01View(); }
+  goPage('page-game');
+}
+
+function buildPlayerTabs() {
+  document.getElementById('players-tabs').innerHTML = G.players.map((p, i) => `
+    <div class="p-tab ${i===G.cur?'active':''}" id="ptab-${i}">
+      <div class="p-tab-name">${p.name}</div>
+      <div class="p-tab-score" id="ptab-score-${i}">${G.mode==='atc'?(p.atcTarget>20?'🎯':p.atcTarget):p.score}</div>
+      <div class="p-tab-legs">${p.legs}L</div>
+    </div>`).join('');
+}
+function updatePlayerTabs() {
+  G.players.forEach((p, i) => {
+    const el = document.getElementById(`ptab-${i}`);
+    if (!el) return;
+    el.classList.toggle('active', i === G.cur);
+    const s = document.getElementById(`ptab-score-${i}`);
+    if (s) s.textContent = G.mode==='atc'?(p.atcTarget>20?'🎯':p.atcTarget):p.score;
+    el.querySelector('.p-tab-legs').textContent = `${p.legs}L`;
+  });
+}
+function updateGameRound() { document.getElementById('game-round-label').textContent = `Round ${G.round}`; }
+
+let curMod = 'S';
+function setMod(m) {
+  curMod = m;
+  ['s','d','t'].forEach(x => document.getElementById(`mod-${x}`).classList.remove('active'));
+  document.getElementById(`mod-${m==='S'?'s':m==='D'?'d':'t'}`).classList.add('active');
+}
+
+function buildNumpad() {
+  const np = document.getElementById('main-numpad');
+  np.innerHTML = '';
+  for (let n = 1; n <= 20; n++) {
+    const b = document.createElement('button');
+    b.className = 'np-btn';
+    b.textContent = n;
+    b.onclick = () => enterScore(n); // Fix 4: no override — respects curMod
+    np.appendChild(b);
+  }
+}
+
+function enterScore(num, override) {
+  if (G.darts.length >= 3) return;
+  const mult = override !== undefined ? override : (curMod==='D'?2:curMod==='T'?3:1);
+  const val = num * mult;
+  const label = (mult===2?'D':mult===3?'T':'') + (num===25?'Bull':num===50?'Bullseye':''+num);
+  G.darts.push({ val, label: val===0?'Miss':label, mult });
+  const i = G.darts.length - 1;
+  document.getElementById(`xDv${i}`).textContent = G.darts[i].label;
+  document.getElementById(`xD${i}`).classList.add('filled');
+  updateX01Totals();
+  if (val === 0) {} else if (num === 25 || num === 50) playSound('bull'); else playSound('hit');
+  setMod('S');
+  if (G.darts.length === 3) {
+    const tot180 = G.darts.reduce((s,d) => s+d.val, 0);
+    if (tot180 === 180) { playSound('180'); showToast('ONE HUNDRED AND EIGHTY!', 3000); }
+    document.getElementById('btn-confirm-g').disabled = false;
+  }
+}
+
+function undoScore() {
+  if (!G.darts.length) return;
+  const i = G.darts.length - 1;
+  G.darts.pop();
+  document.getElementById(`xDv${i}`).textContent = '—';
+  document.getElementById(`xD${i}`).classList.remove('filled');
+  document.getElementById('btn-confirm-g').disabled = true;
+  updateX01Totals();
+  setMod('S');
+}
+
+function updateX01Totals() {
+  const tot = G.darts.reduce((s,d) => s+d.val, 0);
+  const p = G.players[G.cur];
+  const after = p.score - tot;
+  document.getElementById('x-turn-tot').textContent = tot;
+  const el = document.getElementById('x-after');
+  if (after < 0 || after === 1) { el.textContent = 'BUST'; el.style.color = 'var(--red)'; }
+  else { el.textContent = after; el.style.color = after <= 40 ? 'var(--amber)' : 'var(--gl)'; }
+}
+
+function updateX01View() {
+  const p = G.players[G.cur];
+  document.getElementById('x01-player-name').textContent = p.name;
+  G.darts = [];
+  for (let i = 0; i < 3; i++) {
+    document.getElementById(`xDv${i}`).textContent = '—';
+    document.getElementById(`xD${i}`).classList.remove('filled');
+  }
+  document.getElementById('x-turn-tot').textContent = '0';
+  document.getElementById('x-after').textContent = p.score;
+  document.getElementById('x-after').style.color = 'var(--gl)';
+  document.getElementById('btn-confirm-g').disabled = true;
+  setMod('S');
+  updateStrategy();
+  updateCheckoutPanel(p.score);
+}
+
+function updateStrategy() {
+  const p = G.players[G.cur];
+  if (!p) return;
+  const s = getStrategy(p.score);
+  document.getElementById('strat-text').textContent = s.text;
+  document.getElementById('strat-darts').innerHTML = s.darts.map((d, i) =>
+    `<span class="st-dart ${i===s.darts.length-1?'key':''}">${d}</span>`).join('');
+}
+
+function confirmTurn() {
+  const p = G.players[G.cur];
+  const tot = G.darts.reduce((s,d) => s+d.val, 0);
+  const after = p.score - tot;
+  if (after < 0 || after === 1) { showBust(); addHistory(p.name, G.darts, tot, p.score, p.score); nextPlayer(); return; }
+  if (after === 0) {
+    const last = G.darts[G.darts.length-1];
+    if (last.mult !== 2 && last.val !== 50) { showBust(); addHistory(p.name, G.darts, tot, p.score, p.score); nextPlayer(); return; }
+  }
+  p.score = after; p.totalScore += tot; p.turnCount++; p.highTurn = Math.max(p.highTurn, tot);
+  addHistory(p.name, G.darts, tot, p.score+tot, after);
+  syncState();
+  updatePlayerTabs(); // Fix 5: rebuild all tabs so all scores refresh
+  if (after === 0) { p.legs++; handleWin(p); return; }
+  nextPlayer();
+}
+
+function nextPlayer() {
+  G.cur = (G.cur+1) % G.players.length;
+  if (G.cur === 0) { G.round++; updateGameRound(); }
+  updatePlayerTabs();
+  if (G.mode === 'atc') updateATCView(); else updateX01View();
+}
+
+// ── ATC ────────────────────────────────────────────────
+function buildATCBoard() {
+  const board = document.getElementById('atc-board');
+  board.innerHTML = '';
+  [...Array(20).keys()].map(i=>i+1).concat(['B']).forEach(n => {
+    const d = document.createElement('div');
+    d.className = 'atc-num' + (n==='B'?' bull':'');
+    d.id = `atcn-${n}`;
+    d.textContent = n;
+    board.appendChild(d);
+  });
+  refreshATCBoard();
+}
+function refreshATCBoard() {
+  G.players.forEach(p => {
+    for (let i=1; i<=21; i++) {
+      const k = i===21?'B':i;
+      const el = document.getElementById(`atcn-${k}`);
+      if (el && p.atcHits[i]) el.classList.add('hit');
+    }
+  });
+  const p = G.players[G.cur];
+  if (!p) return;
+  document.querySelectorAll('.atc-num').forEach(e => e.classList.remove('current'));
+  const k = p.atcTarget > 20 ? 'B' : p.atcTarget;
+  const el = document.getElementById(`atcn-${k}`);
+  if (el) el.classList.add('current');
+}
+function updateATCView() {
+  const p = G.players[G.cur];
+  if (!p) return;
+  document.getElementById('atc-player-name').textContent = p.name;
+  document.getElementById('atc-target').textContent = p.atcTarget > 20 ? 'Bull' : p.atcTarget;
+  G.atcDarts = [];
+  for (let i=0;i<3;i++) { document.getElementById(`aDv${i}`).textContent='—'; document.getElementById(`aD${i}`).classList.remove('filled'); }
+  refreshATCBoard();
+  updatePlayerTabs();
+  const tips = {1:'Aim for thin single 1.',7:'Seven is tricky — aim slightly left.',17:'Use T17 edge as a reference.',20:'You know T20!',21:'Bull! Take a breath and aim dead centre.'};
+  document.getElementById('atc-tip').textContent = tips[p.atcTarget] || `Aim for segment ${p.atcTarget>20?'Bull':p.atcTarget}.`;
+}
+function atcHit() {
+  const p = G.players[G.cur];
+  const isC = G.useCam;
+  const arr = isC ? G.darts : G.atcDarts;
+  const sl = arr.length;
+  if (sl >= 3) return;
+  arr.push({ val: p.atcTarget, label: p.atcTarget>20?'Bull':''+p.atcTarget, mult: 1 });
+  if (isC) { document.getElementById(`cv${sl}`).textContent='✓'; document.getElementById(`cs${sl}`).classList.add('filled'); }
+  else { document.getElementById(`aDv${sl}`).textContent='✓'; document.getElementById(`aD${sl}`).classList.add('filled'); }
+  if (!p.atcHits) p.atcHits = Array(22).fill(false);
+  p.atcHits[p.atcTarget] = true;
+  const k = p.atcTarget>20?'B':p.atcTarget;
+  const el = document.getElementById(`atcn-${k}`); if (el) { el.classList.add('hit'); el.classList.remove('current'); }
+  p.atcTarget++;
+  if (p.atcTarget > 21) { p.legs++; handleWin(p); return; }
+  const nk = p.atcTarget>20?'B':p.atcTarget;
+  const ne = document.getElementById(`atcn-${nk}`); if (ne) ne.classList.add('current');
+  if (isC) {
+    document.getElementById('cam-remaining').textContent = p.atcTarget>20?'Bull':p.atcTarget;
+    updateCamPills();
+  } else {
+    document.getElementById('atc-target').textContent = p.atcTarget>20?'Bull':p.atcTarget;
+    updatePlayerTabs();
+  }
+  // Fix 7: advance turn on 3rd dart (sl===2 means this was the 3rd)
+  if (sl === 2) { if (isC) setTimeout(camNext,500); else setTimeout(nextPlayer,500); }
+}
+function atcMiss() {
+  const isC = G.useCam;
+  const arr = isC ? G.darts : G.atcDarts;
+  const sl = arr.length;
+  if (sl >= 3) return;
+  arr.push({ val: 0, label: 'Miss', mult: 1 });
+  if (isC) { document.getElementById(`cv${sl}`).textContent='✗'; document.getElementById(`cs${sl}`).classList.add('filled'); }
+  else { document.getElementById(`aDv${sl}`).textContent='✗'; document.getElementById(`aD${sl}`).classList.add('filled'); }
+  if (sl === 2) { if (isC) setTimeout(camNext,400); else setTimeout(nextPlayer,400); }
+}
+function atcUndo() {
+  const p = G.players[G.cur];
+  if (!G.atcDarts.length) return;
+  const last = G.atcDarts.pop();
+  const sl = G.atcDarts.length;
+  document.getElementById(`aDv${sl}`).textContent='—';
+  document.getElementById(`aD${sl}`).classList.remove('filled');
+  if (last.val > 0) {
+    p.atcTarget--;
+    p.atcHits[p.atcTarget] = false;
+    const k = p.atcTarget>20?'B':p.atcTarget;
+    const el = document.getElementById(`atcn-${k}`); if (el) { el.classList.remove('hit'); el.classList.add('current'); }
+    const nk = (p.atcTarget+1)>20?'B':(p.atcTarget+1);
+    const ne = document.getElementById(`atcn-${nk}`); if (ne) ne.classList.remove('current');
+    document.getElementById('atc-target').textContent = p.atcTarget>20?'Bull':p.atcTarget;
+  }
+}
+
+// ── HISTORY ───────────────────────────────────────────
+function addHistory(name, darts, total, before, after) {
+  G.history.unshift({ name, darts: (darts||[]).map(d=>d.label).join(', '), total, after });
+  if (G.history.length > 10) G.history.pop();
+  renderHistory();
+}
+function renderHistory() {
+  const el = document.getElementById('history-list');
+  if (!el) return;
+  el.innerHTML = G.history.slice(0,6).map(h => `
+    <div class="hist-row">
+      <div><div class="hist-player">${h.name}</div><div class="hist-darts">${h.darts}</div></div>
+      <div style="text-align:right"><div class="hist-score">+${h.total}</div><div class="hist-rem">${G.mode==='atc'?'':h.after+' left'}</div></div>
+    </div>`).join('');
+}
+
+// ── MULTIPLAYER SYNC ──────────────────────────────────
+function syncState() {
+  if (!G.isMP) return;
+  saveRoomState('playing'); // Fix 1: keep status as playing during live game
+  wsSend({ type: 'state_update', state: { players: G.players, cur: G.cur, round: G.round, history: G.history, mode: G.mode, status: 'playing' } });
+}
+function refreshCurrentView() {
+  // Called when a remote sync arrives
+  if (G.useCam) { updateCamPills(); }
+  else { updatePlayerTabs(); renderHistory(); }
+  showToast('🔄 Game updated');
+}
+
+// ── WIN ───────────────────────────────────────────────
+function handleWin(p) {
+  const legsNeeded = G.players.length <= 2 ? 2 : 1;
+  if (p.legs >= legsNeeded) {
+    playSound('win');
+    recordWin(p.name);
+    stopCam();
+    document.getElementById('win-name').textContent = p.name;
+    document.getElementById('win-rounds').textContent = G.round;
+    document.getElementById('win-avg').textContent = p.turnCount>0 ? (p.totalScore/p.turnCount).toFixed(1) : '—';
+    document.getElementById('win-high').textContent = p.highTurn || '—';
+    if (G.isMP) saveRoomState('finished');
+    goPage('page-win');
+    generateSummary(p);
+  } else {
+    // Fix 11: leg banner lives in page-game only; show a toast for camera game
+    if (G.useCam) {
+      showToast(`🏆 ${p.name} wins the leg! Next leg starting...`, 2200);
+      setTimeout(() => {
+        const start = parseInt(G.mode) || 501;
+        G.players.forEach(pl => { pl.score = start; });
+        updateCamPills();
+        if (G.mode === 'atc') {
+          G.darts = [];
+          const cur = G.players[G.cur];
+          document.getElementById('cam-remaining').textContent = cur.atcTarget>20?'Bull':cur.atcTarget;
+        } else {
+          resetCamDarts();
+        }
+      }, 2200);
+    } else {
+      const banner = document.getElementById('leg-banner');
+      if (banner) { banner.textContent = `${p.name} wins the leg! Starting next leg...`; banner.classList.add('show'); }
+      setTimeout(() => {
+        if (banner) banner.classList.remove('show');
+        const start = parseInt(G.mode) || 501;
+        G.players.forEach(pl => { pl.score = start; });
+        updatePlayerTabs();
+        // Fix 2: don't call nextPlayer here — updatePlayerTabs + updateX01View is enough; nextPlayer would double-advance cur
+        if (G.mode === 'atc') { G.atcDarts=[]; updateATCView(); } else { updateX01View(); }
+      }, 2000);
+    }
+  }
+}
+
+async function generateSummary(p) {
+  const el = document.getElementById('win-ai-text');
+  el.innerHTML = 'Generating...<span class="spin"></span>';
+  const stats = G.players.map(pl => `${pl.name}: ${pl.turnCount} turns, avg ${pl.turnCount>0?(pl.totalScore/pl.turnCount).toFixed(1):'0'}/turn, best turn ${pl.highTurn}`).join(' | ');
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514', max_tokens: 200,
+        messages: [{ role: 'user', content: `Write a fun 2-sentence darts match summary. Winner: ${p.name}. Mode: ${G.mode}. Rounds: ${G.round}. Stats: ${stats}. Mention one standout stat. Keep it enthusiastic.` }]
+      })
+    });
+    const d = await r.json();
+    el.textContent = d.content?.[0]?.text || `${p.name} takes the win!`;
+  } catch { el.textContent = `What a match! ${p.name} wins in style — well played all!`; }
+}
+
+function rematch() {
+  G.players.forEach(p => {
+    p.score = parseInt(G.mode)||501;
+    p.legs = 0;
+    p.atcTarget = 1;
+    p.atcHits = Array(22).fill(false); // Fix 8: proper array not sparse
+    p.totalScore = 0; p.turnCount = 0; p.highTurn = 0;
+  });
+  G.cur=0; G.round=1; G.history=[]; G.darts=[]; G.atcDarts=[];
+  // Fix 6: clear ATC board DOM hit/current classes before rebuild
+  document.querySelectorAll('.atc-num').forEach(e => e.classList.remove('hit','current'));
+  if (G.useCam && G.camGranted) startCameraGame(); else startManualGame();
+}
+
+// ── MANUAL ENTRY MODAL (used during camera game) ──────
+let _mmMod = 'S';
+function openModal() {
+  buildModalNumpad();
+  document.getElementById('manual-modal').classList.add('open');
+}
+function closeModal() { document.getElementById('manual-modal').classList.remove('open'); }
+function buildModalNumpad() {
+  const np = document.getElementById('modal-numpad');
+  np.innerHTML = '';
+  for (let n=1; n<=20; n++) {
+    const b = document.createElement('button');
+    b.className = 'np-btn';
+    b.textContent = n;
+    b.onclick = () => mmEnter(n, 1);
+    np.appendChild(b);
+  }
+}
+function buildModalNumpad() {
+  const np = document.getElementById('modal-numpad');
+  np.innerHTML = '';
+  for (let n=1; n<=20; n++) {
+    const b = document.createElement('button');
+    b.className = 'np-btn';
+    b.textContent = n;
+    b.onclick = () => mmEnter(n); // Fix 12: no override — respects _mmMod
+    np.appendChild(b);
+  }
+}
+function mmSetMod(m) {
+  _mmMod = m;
+  ['s','d','t'].forEach(x => document.getElementById(`mm-${x}`).classList.remove('active'));
+  document.getElementById(`mm-${m==='S'?'s':m==='D'?'d':'t'}`).classList.add('active');
+}
+function mmEnter(num, forceVal) {
+  if (G.darts.length >= 3) { closeModal(); return; }
+  // Fix 12: forceVal used for bull/miss only; regular numbers use _mmMod
+  let mult, val, label;
+  if (forceVal !== undefined) {
+    val = forceVal; mult = 1;
+    label = forceVal === 0 ? 'Miss' : forceVal === 25 ? 'Bull' : 'Bullseye';
+  } else {
+    mult = _mmMod==='D'?2:_mmMod==='T'?3:1;
+    val = num * mult;
+    label = (mult===2?'D':mult===3?'T':'') + num;
+  }
+  const d = { val, label: val===0?'Miss':label, mult };
+  const i = G.darts.length;
+  G.darts.push(d);
+  document.getElementById(`cv${i}`).textContent = d.label;
+  document.getElementById(`cs${i}`).classList.add('filled');
+  updateCamTotals();
+  mmSetMod('S');
+  if (G.darts.length === 3) { document.getElementById('cam-confirm').disabled = false; closeModal(); }
+}
+
+// ════════════════════════════════════════════════════════
+//  SOUND EFFECTS (Web Audio API — no files needed)
+// ════════════════════════════════════════════════════════
+let _audioCtx = null;
+function _ctx() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return _audioCtx;
+}
+function playSound(type) {
+  try {
+    const ctx = _ctx();
+    if (ctx.state === 'suspended') ctx.resume();
+    const t = ctx.currentTime;
+    const tone = (freq, start, dur, vol = 0.3, wave = 'sine') => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = wave; o.frequency.value = freq;
+      o.connect(g); g.connect(ctx.destination);
+      g.gain.setValueAtTime(vol, t + start);
+      g.gain.exponentialRampToValueAtTime(0.001, t + start + dur);
+      o.start(t + start); o.stop(t + start + dur + 0.01);
+    };
+    switch (type) {
+      case 'hit':   tone(700, 0, .07, .2); tone(500, .04, .06, .1); break;
+      case 'bull':  tone(523, 0, .14, .4); tone(659, .12, .14, .4); tone(784, .24, .2, .4); break;
+      case 'bust':  tone(300, 0, .1, .3, 'sawtooth'); tone(180, .08, .15, .25, 'sawtooth'); tone(90, .2, .2, .15, 'sawtooth'); break;
+      case 'win':   [523, 659, 784, 1047].forEach((f, i) => tone(f, i * .14, .25, .4)); break;
+      case '180':   [523, 659, 784, 880, 1047, 1319].forEach((f, i) => tone(f, i * .08, .3, .45)); tone(1319, .52, .5, .35); break;
+    }
+  } catch (e) {}
+}
+
+// ════════════════════════════════════════════════════════
+//  QR CODE GENERATION
+// ════════════════════════════════════════════════════════
+function generateQR(url) {
+  const el = document.getElementById('qr-code');
+  if (!el) return;
+  el.innerHTML = '';
+  if (typeof QRCode === 'undefined') {
+    el.innerHTML = `<div style="font-size:10px;color:var(--platinum-dim);padding:8px;word-break:break-all">${url}</div>`;
+    return;
+  }
+  new QRCode(el, { text: url, width: 160, height: 160, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+}
+
+// ════════════════════════════════════════════════════════
+//  PLAYER STATS (localStorage persistence)
+// ════════════════════════════════════════════════════════
+function loadStats() {
+  try { return JSON.parse(localStorage.getItem('prodarts_stats') || '{}'); } catch { return {}; }
+}
+function saveStats(s) {
+  try { localStorage.setItem('prodarts_stats', JSON.stringify(s)); } catch {}
+}
+function recordWin(winnerName) {
+  const stats = loadStats();
+  G.players.forEach(pl => {
+    if (!stats[pl.name]) stats[pl.name] = { wins: 0, games: 0, legs: 0, turns: 0, totalScore: 0, best: 0 };
+    const s = stats[pl.name];
+    s.games++;
+    s.turns += pl.turnCount;
+    s.totalScore += pl.totalScore;
+    s.best = Math.max(s.best, pl.highTurn);
+    s.legs += pl.legs;
+    if (pl.name === winnerName) s.wins++;
+  });
+  saveStats(stats);
+}
+function showStatsModal() {
+  const stats = loadStats();
+  const el = document.getElementById('stats-content');
+  const keys = Object.keys(stats);
+  if (!keys.length) {
+    el.innerHTML = '<div style="text-align:center;color:var(--platinum-dim);padding:30px 0">No stats yet — play some games first!</div>';
+  } else {
+    el.innerHTML = keys
+      .sort((a, b) => (stats[b].wins || 0) - (stats[a].wins || 0))
+      .map(name => {
+        const s = stats[name];
+        const avg = s.turns > 0 ? (s.totalScore / s.turns).toFixed(1) : '—';
+        const wr = s.games > 0 ? Math.round((s.wins / s.games) * 100) : 0;
+        const crowns = s.wins > 0 ? ' ' + '★'.repeat(Math.min(s.wins, 5)) : '';
+        return `
+          <div style="margin-bottom:18px">
+            <div class="stats-player-name">${name}${crowns}</div>
+            <div class="stats-grid">
+              <div class="stat-cell"><div class="stat-cell-val">${s.wins}</div><div class="stat-cell-lbl">Wins</div></div>
+              <div class="stat-cell"><div class="stat-cell-val">${s.games}</div><div class="stat-cell-lbl">Games</div></div>
+              <div class="stat-cell"><div class="stat-cell-val">${wr}%</div><div class="stat-cell-lbl">Win Rate</div></div>
+              <div class="stat-cell"><div class="stat-cell-val">${avg}</div><div class="stat-cell-lbl">Avg/Turn</div></div>
+              <div class="stat-cell"><div class="stat-cell-val">${s.best || '—'}</div><div class="stat-cell-lbl">Best Turn</div></div>
+              <div class="stat-cell"><div class="stat-cell-val">${s.legs}</div><div class="stat-cell-lbl">Legs</div></div>
+            </div>
+          </div>`;
+      }).join('<div class="gold-line" style="margin:4px 0 14px"></div>');
+  }
+  document.getElementById('stats-modal').classList.add('open');
+}
+function clearStats() {
+  if (confirm('Clear all player stats? This cannot be undone.')) {
+    localStorage.removeItem('prodarts_stats');
+    showStatsModal();
+    showToast('Stats cleared');
+  }
+}
+
+// ════════════════════════════════════════════════════════
+//  SCORECARD VIEW
+// ════════════════════════════════════════════════════════
+function openScorecard() {
+  const isATC = G.mode === 'atc';
+  const headers = isATC
+    ? ['Player', 'Target', 'Legs', 'Turns', 'Hits']
+    : ['Player', 'Left', 'Legs', 'Turns', 'Avg', 'Best'];
+  const rows = G.players.map((p, i) => {
+    const avg = p.turnCount > 0 ? (p.totalScore / p.turnCount).toFixed(1) : '—';
+    const cells = isATC
+      ? [p.name, p.atcTarget > 20 ? 'Done' : p.atcTarget, p.legs, p.turnCount, (p.atcHits || []).filter(Boolean).length]
+      : [p.name, p.score, p.legs, p.turnCount, avg, p.highTurn || '—'];
+    const isCur = i === G.cur;
+    return `<tr>${cells.map((c, ci) => `<td class="${ci === 0 ? 'sc-name' : ''}${isCur ? ' sc-leader' : ''}">${c}</td>`).join('')}</tr>`;
+  }).join('');
+  document.getElementById('sc-table').innerHTML =
+    `<thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody>`;
+  document.getElementById('scorecard-modal').classList.add('open');
+}
+function closeScorecard() {
+  document.getElementById('scorecard-modal').classList.remove('open');
+}
+
+// ════════════════════════════════════════════════════════
+//  THROW ORDER RANDOMISER
+// ════════════════════════════════════════════════════════
+let _randResult = 0;
+function showRandomiser() {
+  document.getElementById('rand-modal').classList.add('open');
+  document.getElementById('rand-reroll-btn').style.display = 'none';
+  document.getElementById('rand-start-btn').style.display = 'none';
+  document.getElementById('rand-sub').textContent = 'Deciding...';
+  document.getElementById('rand-name').textContent = '—';
+  runRandomiser();
+}
+function runRandomiser() {
+  const names = G.players.map(p => p.name);
+  const totalFrames = 22 + Math.floor(Math.random() * 14);
+  let count = 0;
+  let delay = 55;
+  function frame() {
+    document.getElementById('rand-name').textContent = names[count % names.length];
+    count++;
+    if (count >= totalFrames) {
+      _randResult = (count - 1) % names.length;
+      document.getElementById('rand-name').textContent = names[_randResult];
+      document.getElementById('rand-sub').textContent = `${names[_randResult]} throws first!`;
+      document.getElementById('rand-reroll-btn').style.display = '';
+      document.getElementById('rand-start-btn').style.display = '';
+      playSound('bull');
+    } else {
+      if (count > totalFrames - 8) delay = Math.min(delay + 30, 300);
+      setTimeout(frame, delay);
+    }
+  }
+  setTimeout(frame, delay);
+}
+function reroll() {
+  document.getElementById('rand-reroll-btn').style.display = 'none';
+  document.getElementById('rand-start-btn').style.display = 'none';
+  document.getElementById('rand-sub').textContent = 'Re-rolling...';
+  runRandomiser();
+}
+function skipRand() {
+  _randResult = 0;
+  document.getElementById('rand-modal').classList.remove('open');
+  proceedAfterRand();
+}
+function confirmRandStart() {
+  G.cur = _randResult;
+  document.getElementById('rand-modal').classList.remove('open');
+  proceedAfterRand();
+}
+
+// ════════════════════════════════════════════════════════
+//  ENHANCED CHECKOUT PANEL
+// ════════════════════════════════════════════════════════
+function dartCssClass(d) {
+  if (!d) return '';
+  if (d.startsWith('T')) return 'treble';
+  if (d.startsWith('D')) return 'double';
+  if (d === 'Bull' || d === 'Bullseye') return 'bull-dart';
+  return '';
+}
+function updateCheckoutPanel(score) {
+  const panel = document.getElementById('co-panel');
+  if (!panel || G.mode === 'atc') return;
+  if (score > 170 || score <= 1 || !CO[score]) { panel.style.display = 'none'; return; }
+  panel.style.display = '';
+  const route = CO[score];
+  const dartCount = route.length;
+  const finishLabel = dartCount === 1 ? '1-dart finish!' : dartCount === 2 ? '2-dart finish!' : '3-dart checkout';
+  panel.innerHTML = `
+    <div class="co-title">${finishLabel}</div>
+    <div class="co-route">
+      ${route.map((d, i) =>
+        `${i > 0 ? '<span class="co-arrow">→</span>' : ''}<span class="co-dart ${dartCssClass(d)}">${d}</span>`
+      ).join('')}
+    </div>`;
+}
+
+// ════════════════════════════════════════════════════════
+//  WEBRTC VIDEO / AUDIO CALL
+// ════════════════════════════════════════════════════════
+const peers = {};
+let callStream = null;
+let callActive = false;
+let _micMuted = false;
+let _camMuted = false;
+const STUN_CONFIG = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] };
+
+async function startCall() {
+  if (!G.isMP) { showToast('Video call only works in multiplayer mode'); return; }
+  try {
+    callStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true });
+    document.getElementById('local-vid').srcObject = callStream;
+    callActive = true;
+    document.getElementById('call-panel').classList.add('show');
+    document.getElementById('call-controls').classList.add('show');
+    for (const p of G.players) {
+      if (p.name !== G.myName) await createCallOffer(p.name).catch(() => {});
+    }
+    const btn = document.getElementById('btn-start-call');
+    if (btn) { btn.textContent = 'Call Active'; btn.disabled = true; }
+    showToast('Call started — connecting to players...');
+  } catch (err) {
+    const msg = err.name === 'NotAllowedError' ? 'Permission denied' : err.message;
+    showToast(`Could not start call: ${msg}`);
+  }
+}
+
+function _makePeer(remoteName) {
+  if (peers[remoteName]) { try { peers[remoteName].close(); } catch (e) {} }
+  const pc = new RTCPeerConnection(STUN_CONFIG);
+  if (callStream) callStream.getTracks().forEach(t => pc.addTrack(t, callStream));
+  pc.ontrack = (e) => {
+    let wrap = document.getElementById(`rv-wrap-${remoteName}`);
+    if (!wrap) {
+      wrap = document.createElement('div');
+      wrap.id = `rv-wrap-${remoteName}`;
+      const vid = document.createElement('video');
+      vid.id = `rv-${remoteName}`;
+      vid.className = 'call-thumb';
+      vid.autoplay = true; vid.playsinline = true;
+      const lbl = document.createElement('div');
+      lbl.className = 'call-name-tag';
+      lbl.textContent = remoteName;
+      wrap.appendChild(vid); wrap.appendChild(lbl);
+      document.getElementById('remote-vids').appendChild(wrap);
+    }
+    document.getElementById(`rv-${remoteName}`).srcObject = e.streams[0];
+  };
+  pc.onicecandidate = (e) => {
+    if (e.candidate) wsSend({ type: 'webrtc_ice', to: remoteName, candidate: e.candidate.toJSON() });
+  };
+  pc.onconnectionstatechange = () => {
+    if (pc.connectionState === 'connected') showToast(`Connected with ${remoteName}`);
+    if (['disconnected', 'failed', 'closed'].includes(pc.connectionState)) {
+      const el = document.getElementById(`rv-wrap-${remoteName}`);
+      if (el) el.remove();
+    }
+  };
+  peers[remoteName] = pc;
+  return pc;
+}
+
+async function createCallOffer(remoteName) {
+  const pc = _makePeer(remoteName);
+  const offer = await pc.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
+  await pc.setLocalDescription(offer);
+  wsSend({ type: 'webrtc_offer', to: remoteName, offer: { type: offer.type, sdp: offer.sdp } });
+}
+
+async function handleWebRTCOffer(msg) {
+  if (!callActive) {
+    try {
+      callStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true });
+    } catch (e) {
+      try { callStream = await navigator.mediaDevices.getUserMedia({ audio: true }); } catch (e2) {}
+    }
+    if (callStream) {
+      document.getElementById('local-vid').srcObject = callStream;
+      callActive = true;
+      document.getElementById('call-panel').classList.add('show');
+      document.getElementById('call-controls').classList.add('show');
+      showToast(`${msg.from} started a call — joining...`);
+    }
+  }
+  const pc = _makePeer(msg.from);
+  await pc.setRemoteDescription(new RTCSessionDescription(msg.offer));
+  const answer = await pc.createAnswer();
+  await pc.setLocalDescription(answer);
+  wsSend({ type: 'webrtc_answer', to: msg.from, answer: { type: answer.type, sdp: answer.sdp } });
+}
+
+function toggleMic() {
+  _micMuted = !_micMuted;
+  if (callStream) callStream.getAudioTracks().forEach(t => t.enabled = !_micMuted);
+  const btn = document.getElementById('call-mic-btn');
+  btn.textContent = _micMuted ? '🔇' : '🎤';
+  btn.classList.toggle('on', !_micMuted);
+}
+function toggleCallCam() {
+  _camMuted = !_camMuted;
+  if (callStream) callStream.getVideoTracks().forEach(t => t.enabled = !_camMuted);
+  const btn = document.getElementById('call-cam-btn');
+  btn.textContent = _camMuted ? '🙈' : '📷';
+  btn.classList.toggle('on', !_camMuted);
+}
+function endCall() {
+  if (callStream) { callStream.getTracks().forEach(t => t.stop()); callStream = null; }
+  Object.values(peers).forEach(pc => { try { pc.close(); } catch (e) {} });
+  Object.keys(peers).forEach(k => delete peers[k]);
+  document.getElementById('call-panel').classList.remove('show');
+  document.getElementById('call-controls').classList.remove('show');
+  document.getElementById('remote-vids').innerHTML = '';
+  document.getElementById('local-vid').srcObject = null;
+  callActive = false; _micMuted = false; _camMuted = false;
+  const btn = document.getElementById('btn-start-call');
+  if (btn) { btn.textContent = 'Start Video Call with Friends'; btn.disabled = false; }
+  showToast('Call ended');
+}
+
+// ════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  buildNumpad();
+  buildModalNumpad();
+
+  // Check if camera permission already granted via Permissions API
+  if (navigator.permissions) {
+    navigator.permissions.query({ name: 'camera' }).then(r => {
+      if (r.state === 'granted') {
+        camPermState = 'granted';
+        // Pre-acquire stream silently
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal:'environment' } } })
+          .then(s => {
+            G.camStream = s; G.camGranted = true; G.useCam = true;
+            document.getElementById('cam-dot').className = 'cam-status-dot granted';
+            document.getElementById('cam-status-text').textContent = 'Camera ready ✓';
+            document.getElementById('btn-request-cam').textContent = 'Camera enabled ✓';
+            document.getElementById('btn-request-cam').disabled = true;
+          }).catch(() => {});
+      } else if (r.state === 'denied') {
+        camPermState = 'denied';
+        document.getElementById('cam-dot').className = 'cam-status-dot denied';
+        document.getElementById('cam-status-text').textContent = 'Camera blocked — manual scoring only';
+      }
+    }).catch(() => {});
+  }
+
+  // Handle ?room= URL param for joining
+  const params = new URLSearchParams(location.search);
+  const room = params.get('room');
+  if (room) {
+    document.getElementById('join-code-input').value = room;
+    goPage('page-join');
+  }
+});
+</script>
+<!-- ── VIDEO CALL PANEL ── -->
+<div class="call-panel" id="call-panel">
+  <div>
+    <video class="call-thumb local" id="local-vid" autoplay muted playsinline></video>
+    <div class="call-name-tag">You</div>
+  </div>
+  <div id="remote-vids"></div>
+</div>
+<div class="call-controls" id="call-controls">
+  <button class="call-btn on" id="call-mic-btn" onclick="toggleMic()" title="Mute mic">🎤</button>
+  <button class="call-btn on" id="call-cam-btn" onclick="toggleCallCam()" title="Toggle camera">📷</button>
+  <button class="call-btn end" onclick="endCall()" title="End call">📵</button>
+</div>
+</body>
+</html>
