@@ -1406,8 +1406,7 @@ input::placeholder { color: var(--platinum-dim); opacity: .6; }
 
       <span class="label">Players</span>
       <div class="player-list" id="player-list">
-        <div class="player-row"><div class="player-badge">1</div><input type="text" class="pname" placeholder="Player 1" value="Player 1"></div>
-        <div class="player-row"><div class="player-badge" style="background:var(--ad)">2</div><input type="text" class="pname" placeholder="Player 2" value="Player 2"></div>
+        <div class="player-row"><div class="player-badge">1</div><input type="text" class="pname" id="player1-name" placeholder="Your name" value="Player 1"></div>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:16px">
         <button class="btn btn-secondary btn-sm" onclick="addPlayer()">+ Add player</button>
@@ -3212,16 +3211,19 @@ function pdRefreshBar() {
   const avatar = document.getElementById('pd-bar-avatar');
   const name = document.getElementById('pd-bar-name');
   const sub = document.getElementById('pd-bar-sub');
+  const p1input = document.getElementById('player1-name');
   if (!active) {
     avatar.textContent = '👤'; avatar.className = 'profile-avatar empty';
     name.textContent = 'Set up your profile';
     sub.textContent = 'Track stats, history & friends';
+    if (p1input) p1input.value = 'Player 1';
   } else {
     avatar.textContent = active.avatar; avatar.className = 'profile-avatar';
     name.textContent = active.name;
     const s = active.stats;
     const avg = s.turnCount > 0 ? (s.totalScore / s.turnCount).toFixed(1) : '—';
     sub.textContent = `${s.gamesPlayed} games · ${s.gamesWon} wins · Avg ${avg}`;
+    if (p1input) p1input.value = active.name;
   }
 }
 
