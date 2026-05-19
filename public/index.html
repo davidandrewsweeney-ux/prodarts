@@ -537,7 +537,9 @@ input::placeholder { color: var(--platinum-dim); opacity: .6; }
   text-align: center;
   transition: all .2s;
 }
+.d-slot { cursor: pointer; }
 .d-slot.filled { border-color: rgba(201,168,76,.45); background: rgba(201,168,76,.1); }
+.d-slot.filled:active { background: rgba(201,168,76,.22); }
 .d-slot-label { font-size: 8px; color: rgba(255,255,255,.3); text-transform: uppercase; letter-spacing: 2px; font-weight: 600; }
 .d-slot-val { font-family: var(--fd); font-size: 20px; font-weight: 700; color: var(--platinum-dim); line-height: 1.1; margin-top: 1px; }
 .d-slot.filled .d-slot-val { color: var(--gold-light); }
@@ -1373,6 +1375,7 @@ input::placeholder { color: var(--platinum-dim); opacity: .6; }
     <div class="hud-top">
       <div class="hud-logo">Pro<span style="color:var(--gl)">Darts</span></div>
       <div class="hud-mode" id="hud-mode">501</div>
+      <button class="hud-quit" onclick="switchToManualMode()" style="margin-right:5px">📱 Manual</button>
       <button class="hud-quit" onclick="openScorecard()" style="margin-right:5px">Stats</button>
       <button class="hud-quit" onclick="quitGame()">✕ Quit</button>
     </div>
@@ -1406,9 +1409,9 @@ input::placeholder { color: var(--platinum-dim); opacity: .6; }
       </div>
 
       <div class="dart-slots">
-        <div class="d-slot" id="cs0"><div class="d-slot-label">Dart 1</div><div class="d-slot-val" id="cv0">—</div></div>
-        <div class="d-slot" id="cs1"><div class="d-slot-label">Dart 2</div><div class="d-slot-val" id="cv1">—</div></div>
-        <div class="d-slot" id="cs2"><div class="d-slot-label">Dart 3</div><div class="d-slot-val" id="cv2">—</div></div>
+        <div class="d-slot" id="cs0" onclick="camUndoTo(0)" title="Tap to edit"><div class="d-slot-label">Dart 1 ✎</div><div class="d-slot-val" id="cv0">—</div></div>
+        <div class="d-slot" id="cs1" onclick="camUndoTo(1)" title="Tap to edit"><div class="d-slot-label">Dart 2 ✎</div><div class="d-slot-val" id="cv1">—</div></div>
+        <div class="d-slot" id="cs2" onclick="camUndoTo(2)" title="Tap to edit"><div class="d-slot-label">Dart 3 ✎</div><div class="d-slot-val" id="cv2">—</div></div>
       </div>
 
       <div class="turn-row">
@@ -1434,7 +1437,7 @@ input::placeholder { color: var(--platinum-dim); opacity: .6; }
       <div class="cam-actions">
         <button class="btn-undo-cam" onclick="camUndo()">↩ Undo</button>
         <button class="btn-confirm-cam" id="cam-confirm" onclick="camConfirm()" disabled>CONFIRM</button>
-        <button class="btn-manual-cam" onclick="openModal()">✏️ Manual</button>
+        <button class="btn-manual-cam" onclick="camManualEntry()">✏️ Manual</button>
       </div>
     </div>
   </div>
@@ -1449,6 +1452,7 @@ input::placeholder { color: var(--platinum-dim); opacity: .6; }
     <div class="round-badge" id="game-round-label">Round 1</div>
     <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
       <div class="sync-dot offline" id="game-sync-dot" title="Multiplayer sync"></div>
+      <button class="btn btn-secondary btn-sm" id="game-cam-btn" onclick="switchToCameraMode()" style="display:none" title="Switch to AI camera">📷 AI</button>
       <button class="btn btn-secondary btn-sm" id="game-call-btn" onclick="toggleGameCall()" style="display:none" title="Video call">📞</button>
       <button class="btn btn-secondary btn-sm" onclick="openScorecard()">Stats</button>
       <button class="btn btn-secondary btn-sm" onclick="quitGame()">Quit</button>
@@ -2244,8 +2248,73 @@ function camUndo() {
   G.darts.pop();
   document.getElementById(`cv${i}`).textContent = '—';
   document.getElementById(`cs${i}`).classList.remove('filled');
-  document.getElementById('cam-confirm').disabled = true;
-  updateCamTotals();
+  document.getElementById('cam-confirm').disabled = G.darts.length === 0;
+  if (G.darts.length > 0) updateCamTotals();
+  else { document.getElementById('cam-turn-total').textContent = '0'; const p=G.players[G.cur]; document.getElementById('cam-remaining').textContent=G.mode==='atc'?(p.atcTarget>20?'Bull':p.atcTarget):p.score; document.getElementById('cam-remaining').className='turn-big'; }
+}
+
+// Tap a dart slot to remove it (and all after it) then re-enter via modal
+function camUndoTo(idx) {
+  if (!document.getElementById(`cs${idx}`).classList.contains('filled')) return;
+  G.darts.splice(idx);
+  for (let i = idx; i < 3; i++) {
+    document.getElementById(`cv${i}`).textContent = '—';
+    document.getElementById(`cs${i}`).classList.remove('filled');
+  }
+  if (G.darts.length > 0) updateCamTotals();
+  else {
+    document.getElementById('cam-turn-total').textContent = '0';
+    const p = G.players[G.cur];
+    document.getElementById('cam-remaining').textContent = G.mode === 'atc' ? (p.atcTarget > 20 ? 'Bull' : p.atcTarget) : p.score;
+    document.getElementById('cam-remaining').className = 'turn-big';
+  }
+  document.getElementById('cam-confirm').disabled = G.darts.length === 0;
+  document.getElementById('ai-result').classList.remove('show');
+  openModal();
+}
+
+// ✏️ Manual button — clears any AI darts first, then opens entry modal
+function camManualEntry() {
+  if (G.darts.length > 0) {
+    G.darts = [];
+    for (let i = 0; i < 3; i++) {
+      document.getElementById(`cv${i}`).textContent = '—';
+      document.getElementById(`cs${i}`).classList.remove('filled');
+    }
+    document.getElementById('cam-turn-total').textContent = '0';
+    const p = G.players[G.cur];
+    document.getElementById('cam-remaining').textContent = G.mode === 'atc' ? (p.atcTarget > 20 ? 'Bull' : p.atcTarget) : p.score;
+    document.getElementById('cam-remaining').className = 'turn-big';
+    document.getElementById('cam-confirm').disabled = true;
+    document.getElementById('ai-result').classList.remove('show');
+  }
+  openModal();
+}
+
+// Switch from camera page to manual scoring page
+function switchToManualMode() {
+  G.useCam = false;
+  const gcamBtn = document.getElementById('game-cam-btn');
+  if (gcamBtn) gcamBtn.style.display = '';
+  startManualGame();
+}
+
+// Switch from manual page to camera scoring page
+async function switchToCameraMode() {
+  if (!G.camGranted) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } });
+      G.camStream = stream;
+      G.camGranted = true;
+    } catch (err) {
+      showToast('Camera permission denied — staying in manual mode');
+      return;
+    }
+  }
+  G.useCam = true;
+  const gcamBtn = document.getElementById('game-cam-btn');
+  if (gcamBtn) gcamBtn.style.display = 'none';
+  startCameraGame();
 }
 function camNext() {
   G.cur = (G.cur+1) % G.players.length;
@@ -2304,6 +2373,8 @@ function startManualGame() {
     const gcb = document.getElementById('game-call-btn');
     if (gcb) gcb.style.display = '';
   }
+  const gcamBtn = document.getElementById('game-cam-btn');
+  if (gcamBtn) gcamBtn.style.display = '';
   goPage('page-game');
 }
 
