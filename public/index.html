@@ -542,6 +542,12 @@ input::placeholder { color: var(--platinum-dim); opacity: .6; }
 .reticle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -52%); width: 220px; height: 220px; pointer-events: none; }
 .reticle svg { width: 100%; height: 100%; }
 
+/* Zoom strip */
+.zoom-strip { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 10px; pointer-events: all; z-index: 10; }
+.zoom-btn { width: 38px; height: 38px; border-radius: 50%; background: rgba(0,0,0,.55); border: 1.5px solid rgba(255,255,255,.22); color: var(--platinum); font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; line-height: 1; -webkit-tap-highlight-color: transparent; }
+.zoom-btn:active { background: rgba(201,168,76,.3); border-color: var(--gold); }
+.zoom-level-badge { font-size: 11px; font-weight: 700; color: var(--gold-light); background: rgba(0,0,0,.55); border: 1px solid rgba(201,168,76,.3); border-radius: 8px; padding: 3px 6px; min-width: 28px; text-align: center; letter-spacing: .5px; }
+
 /* Bottom HUD */
 .hud-bottom {
   position: absolute; bottom: 0; left: 0; right: 0;
@@ -1531,6 +1537,13 @@ input::placeholder { color: var(--platinum-dim); opacity: .6; }
       </svg>
     </div>
 
+    <!-- Zoom controls -->
+    <div class="zoom-strip" id="zoom-strip">
+      <button class="zoom-btn" onclick="adjustZoom(0.5)" title="Zoom in">+</button>
+      <div class="zoom-level-badge" id="zoom-level">1×</div>
+      <button class="zoom-btn" onclick="adjustZoom(-0.5)" title="Zoom out">−</button>
+    </div>
+
     <div class="hud-bottom">
       <div class="strategy-strip" id="cam-strategy">
         <div style="font-size:14px;flex-shrink:0;margin-top:1px">🎯</div>
@@ -2351,6 +2364,8 @@ function startCameraGame() {
   vid.srcObject = G.camStream;
   vid.play().catch(() => {});
 
+  resetZoom();
+  initPinchZoom();
   goPage('page-camera');
 }
 
@@ -2409,6 +2424,81 @@ function updateCamStrategy() {
   document.getElementById('cam-strat-text').textContent = s.text;
   document.getElementById('cam-strat-darts').innerHTML = s.darts.map((d, i) =>
     `<span class="s-dart ${i===s.darts.length-1?'key':''}">${d}</span>`).join('');
+}
+
+// ── CAMERA ZOOM ───────────────────────────────────────
+let _camZoom = 1.0;
+let _pinchStartDist = 0;
+let _pinchStartZoom = 1.0;
+
+function adjustZoom(delta) { setCamZoom(_camZoom + delta); }
+
+async function setCamZoom(level) {
+  _camZoom = Math.min(4.0, Math.max(1.0, Math.round(level * 2) / 2)); // snap to 0.5 steps
+  const badge = document.getElementById('zoom-level');
+  if (badge) badge.textContent = _camZoom === Math.floor(_camZoom) ? `${_camZoom}×` : `${_camZoom}×`;
+
+  // Try hardware zoom via MediaStream API
+  if (G.camStream) {
+    const track = G.camStream.getVideoTracks()[0];
+    if (track) {
+      const caps = track.getCapabilities ? track.getCapabilities() : {};
+      if (caps.zoom) {
+        const hwZoom = Math.min(caps.zoom.max, Math.max(caps.zoom.min, _camZoom));
+        try {
+          await track.applyConstraints({ advanced: [{ zoom: hwZoom }] });
+          document.getElementById('vid').style.transform = '';
+          return;
+        } catch (e) {}
+      }
+    }
+  }
+
+  // Fallback: CSS scale transform
+  const vid = document.getElementById('vid');
+  if (vid) {
+    vid.style.transform = _camZoom > 1 ? `scale(${_camZoom})` : '';
+    vid.style.transformOrigin = 'center center';
+  }
+}
+
+function resetZoom() {
+  _camZoom = 1.0;
+  const badge = document.getElementById('zoom-level');
+  if (badge) badge.textContent = '1×';
+  const vid = document.getElementById('vid');
+  if (vid) { vid.style.transform = ''; }
+  if (G.camStream) {
+    const track = G.camStream.getVideoTracks()[0];
+    if (track) {
+      const caps = track.getCapabilities ? track.getCapabilities() : {};
+      if (caps.zoom) track.applyConstraints({ advanced: [{ zoom: caps.zoom.min }] }).catch(() => {});
+    }
+  }
+}
+
+function initPinchZoom() {
+  const hud = document.querySelector('#page-camera .hud');
+  if (!hud || hud._pinchReady) return;
+  hud._pinchReady = true;
+  hud.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+      _pinchStartDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      _pinchStartZoom = _camZoom;
+    }
+  }, { passive: true });
+  hud.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      setCamZoom(_pinchStartZoom * (dist / _pinchStartDist));
+    }
+  }, { passive: true });
 }
 
 // ── AI SCAN ───────────────────────────────────────────
