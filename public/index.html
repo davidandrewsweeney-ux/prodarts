@@ -351,6 +351,14 @@ input::placeholder { color: var(--platinum-dim); opacity: .6; }
 }
 .toggle.on::after { transform: translateX(19px); }
 
+/* ── BOT SECTION ── */
+.bot-level-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 0 4px; }
+.bot-lvl-btn { padding: 10px 6px; border-radius: 10px; border: 1.5px solid var(--bdr); background: var(--obsidian-2); color: var(--platinum); font-size: 13px; font-weight: 600; cursor: pointer; transition: all .2s; letter-spacing: .3px; }
+.bot-lvl-btn.active { border-color: var(--gold); background: rgba(201,168,76,.15); color: var(--gold-light); }
+.bot-lvl-btn:active { transform: scale(.97); }
+#bot-thinking { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(20,20,20,.92); border: 1px solid rgba(201,168,76,.4); border-radius: 24px; padding: 10px 20px; font-size: 13px; color: var(--gold-light); letter-spacing: .5px; z-index: 300; display: none; white-space: nowrap; box-shadow: 0 4px 20px rgba(0,0,0,.5); }
+#bot-thinking.show { display: block; }
+
 /* ── LOBBY PAGE ── */
 #page-lobby {
   background: var(--obsidian);
@@ -1294,6 +1302,24 @@ input::placeholder { color: var(--platinum-dim); opacity: .6; }
         <button class="btn btn-secondary btn-sm" onclick="removePlayer()">− Remove</button>
       </div>
 
+      <!-- Bot Opponent -->
+      <span class="label">Bot Opponent</span>
+      <div class="mp-section" style="margin-bottom:16px">
+        <div class="mp-row" id="bot-toggle" onclick="toggleBot()">
+          <div>
+            <div class="mp-label">🤖 Play against an AI bot</div>
+            <div class="mp-sub">Bot throws automatically with adjustable skill level</div>
+          </div>
+          <div class="toggle" id="bot-toggle-switch"></div>
+        </div>
+        <div class="bot-level-grid" id="bot-level-grid" style="display:none">
+          <button class="bot-lvl-btn" id="blvl-beginner" onclick="setBotLevel('beginner',this)">🟢 Beginner</button>
+          <button class="bot-lvl-btn active" id="blvl-amateur" onclick="setBotLevel('amateur',this)">🔵 Amateur</button>
+          <button class="bot-lvl-btn" id="blvl-club" onclick="setBotLevel('club',this)">🟡 Club Player</button>
+          <button class="bot-lvl-btn" id="blvl-pro" onclick="setBotLevel('pro',this)">🔴 Pro</button>
+        </div>
+      </div>
+
       <!-- Multiplayer -->
       <span class="label">Online Multiplayer</span>
       <div class="mp-section">
@@ -1891,6 +1917,146 @@ function setMode(m, el) {
   el.classList.add('selected');
 }
 
+// ════════════════════════════════════════════════════════
+//  BOT OPPONENT
+// ════════════════════════════════════════════════════════
+let botEnabled = false;
+let currentBotLevel = 'amateur';
+
+// Dartboard adjacent segments (clockwise ring)
+const BOT_ADJ = {20:[1,5],1:[20,18],18:[1,4],4:[18,13],13:[4,6],6:[13,10],10:[6,15],15:[10,2],2:[15,17],17:[2,3],3:[17,19],19:[3,7],7:[19,16],16:[7,8],8:[16,11],11:[8,14],14:[11,9],9:[14,12],12:[9,5],5:[12,20]};
+
+const BOT_CONFIGS = {
+  beginner: { label:'Beginner', emoji:'🟢', treble:0.04, dbl:0.09, singleHit:0.45, atcHit:0.28 },
+  amateur:  { label:'Amateur',  emoji:'🔵', treble:0.17, dbl:0.22, singleHit:0.62, atcHit:0.45 },
+  club:     { label:'Club Player', emoji:'🟡', treble:0.35, dbl:0.40, singleHit:0.75, atcHit:0.62 },
+  pro:      { label:'Pro',      emoji:'🔴', treble:0.62, dbl:0.57, singleHit:0.88, atcHit:0.80 },
+};
+
+function toggleBot() {
+  botEnabled = !botEnabled;
+  document.getElementById('bot-toggle-switch').classList.toggle('on', botEnabled);
+  document.getElementById('bot-toggle').classList.toggle('on', botEnabled);
+  document.getElementById('bot-level-grid').style.display = botEnabled ? 'grid' : 'none';
+}
+function setBotLevel(level, el) {
+  currentBotLevel = level;
+  document.querySelectorAll('.bot-lvl-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// Simulate a single dart throw for X01
+function botThrowDart(remaining, cfg) {
+  // Bull checkout
+  if (remaining === 50) {
+    if (Math.random() < cfg.dbl * 0.85) return { val:50, label:'Bull 50', mult:2 };
+    if (Math.random() < 0.45) return { val:25, label:'Bull', mult:1 };
+    const m = [1,3,5,11,15][Math.floor(Math.random()*5)];
+    return { val:m, label:''+m, mult:1 };
+  }
+  // Double checkout (≤40, even)
+  if (remaining > 0 && remaining <= 40 && remaining % 2 === 0) {
+    const n = remaining / 2;
+    if (Math.random() < cfg.dbl) return { val:remaining, label:`D${n}`, mult:2 };
+    if (Math.random() < 0.50) return { val:n, label:''+n, mult:1 };
+    const adj = BOT_ADJ[n] || [1,5];
+    const a = adj[Math.floor(Math.random()*adj.length)];
+    return { val:a, label:''+a, mult:1 };
+  }
+  // Even setup (42-60: hit single to leave a ≤40 double)
+  if (remaining > 40 && remaining <= 60 && remaining % 2 === 0) {
+    const t = remaining - 40;
+    if (Math.random() < cfg.singleHit) return { val:t, label:''+t, mult:1 };
+    const adj = BOT_ADJ[t] || [1,5];
+    const a = adj[Math.floor(Math.random()*adj.length)];
+    return { val:a, label:''+a, mult:1 };
+  }
+  // Odd setup (≤41: aim for S(remaining-40) to leave D20)
+  if (remaining > 0 && remaining <= 41 && remaining % 2 === 1) {
+    const t = remaining - 40;
+    if (t >= 1 && t <= 20 && Math.random() < cfg.singleHit) return { val:t, label:''+t, mult:1 };
+  }
+  // Standard throw — aim T20
+  const r = Math.random();
+  if (r < cfg.treble) return { val:60, label:'T20', mult:3 };
+  if (r < cfg.treble + (1 - cfg.treble) * cfg.singleHit) return { val:20, label:'20', mult:1 };
+  const near = BOT_ADJ[20][Math.floor(Math.random()*2)]; // 1 or 5
+  const r2 = Math.random();
+  if (r2 < 0.12) return { val:near*3, label:`T${near}`, mult:3 };
+  if (r2 < 0.28) return { val:near*2, label:`D${near}`, mult:2 };
+  return { val:near, label:''+near, mult:1 };
+}
+
+function doBotTurnX01() {
+  const p = G.players[G.cur];
+  const cfg = BOT_CONFIGS[p.botLevel];
+  const darts = [];
+  let remaining = p.score;
+  for (let i = 0; i < 3; i++) {
+    const dart = botThrowDart(remaining, cfg);
+    darts.push(dart);
+    const newRem = remaining - dart.val;
+    if (newRem < 0 || newRem === 1) break; // would bust
+    remaining = newRem;
+    if (remaining === 0) break; // checkout!
+  }
+  const tot = darts.reduce((s, d) => s + d.val, 0);
+  const after = p.score - tot;
+  const last = darts[darts.length - 1];
+  const isBust = after < 0 || after === 1 || (after === 0 && last.mult !== 2 && last.val !== 50);
+
+  document.getElementById('bot-thinking').classList.remove('show');
+
+  if (isBust) {
+    showBust();
+    addHistory(p.name, darts, tot, p.score, p.score);
+  } else {
+    p.score = after;
+    p.totalScore = (p.totalScore || 0) + tot;
+    p.turnCount = (p.turnCount || 0) + 1;
+    p.highTurn = Math.max(p.highTurn || 0, tot);
+    addHistory(p.name, darts, tot, p.score + tot, after);
+    syncState();
+  }
+  if (G.useCam) updateCamPills(); else updatePlayerTabs();
+  if (!isBust && after === 0) { p.legs++; handleWin(p); return; }
+  if (G.useCam) camNext(); else nextPlayer();
+}
+
+function doBotTurnATC() {
+  const p = G.players[G.cur];
+  const cfg = BOT_CONFIGS[p.botLevel];
+  for (let i = 0; i < 3; i++) {
+    if (p.atcTarget > 21) break;
+    if (Math.random() < cfg.atcHit) {
+      p.atcHits[p.atcTarget] = true;
+      p.atcTarget++;
+    }
+  }
+  p.turnCount = (p.turnCount || 0) + 1;
+  syncState();
+  document.getElementById('bot-thinking').classList.remove('show');
+  if (p.atcTarget > 21) {
+    p.legs++;
+    if (G.useCam) updateCamPills(); else updateATCView();
+    handleWin(p);
+    return;
+  }
+  if (G.useCam) camNext(); else nextPlayer();
+}
+
+function scheduleBotTurn() {
+  const p = G.players[G.cur];
+  if (!p || !p.isBot) return;
+  const el = document.getElementById('bot-thinking');
+  document.getElementById('bot-thinking-name').textContent = p.name;
+  el.classList.add('show');
+  setTimeout(() => {
+    if (G.mode === 'atc') doBotTurnATC();
+    else doBotTurnX01();
+  }, 1400 + Math.random() * 1000);
+}
+
 let mpEnabled = false;
 function toggleMP() {
   mpEnabled = !mpEnabled;
@@ -1918,11 +2084,24 @@ function removePlayer() {
 
 function startGame() {
   const names = [...document.querySelectorAll('.pname')].map(i => i.value.trim() || 'Player');
+  const startScore = parseInt(G.mode) || 501;
   G.players = names.map(name => ({
-    name, score: parseInt(G.mode) || 501, legs: 0,
+    name, score: startScore, legs: 0,
     atcTarget: 1, atcHits: Array(22).fill(false),
-    totalScore: 0, turnCount: 0, highTurn: 0
+    totalScore: 0, turnCount: 0, highTurn: 0,
+    isBot: false, botLevel: null
   }));
+
+  if (botEnabled && !mpEnabled) {
+    const cfg = BOT_CONFIGS[currentBotLevel];
+    G.players.push({
+      name: `${cfg.label} Bot`, score: startScore, legs: 0,
+      atcTarget: 1, atcHits: Array(22).fill(false),
+      totalScore: 0, turnCount: 0, highTurn: 0,
+      isBot: true, botLevel: currentBotLevel
+    });
+  }
+
   G.cur = 0; G.round = 1; G.history = []; G.darts = []; G.atcDarts = [];
 
   if (mpEnabled) {
@@ -2072,7 +2251,7 @@ function startCameraGame() {
 function buildCamPills() {
   document.getElementById('score-pills').innerHTML = G.players.map((p, i) => `
     <div class="pill ${i===G.cur?'active':''}" id="pill-${i}">
-      <div class="pill-name">${p.name}</div>
+      <div class="pill-name">${p.isBot ? '🤖 ' : ''}${p.name}</div>
       <div class="pill-score" id="pill-score-${i}">${G.mode==='atc'?(p.atcTarget>20?'🎯':p.atcTarget):p.score}</div>
       <div class="pill-legs">${p.legs}L</div>
     </div>`).join('');
@@ -2336,6 +2515,7 @@ function camNext() {
   } else {
     resetCamDarts();
   }
+  scheduleBotTurn();
 }
 
 function quitGame() {
@@ -2376,12 +2556,13 @@ function startManualGame() {
   const gcamBtn = document.getElementById('game-cam-btn');
   if (gcamBtn) gcamBtn.style.display = '';
   goPage('page-game');
+  scheduleBotTurn();
 }
 
 function buildPlayerTabs() {
   document.getElementById('players-tabs').innerHTML = G.players.map((p, i) => `
     <div class="p-tab ${i===G.cur?'active':''}" id="ptab-${i}">
-      <div class="p-tab-name">${p.name}</div>
+      <div class="p-tab-name">${p.isBot ? '🤖 ' : ''}${p.name}</div>
       <div class="p-tab-score" id="ptab-score-${i}">${G.mode==='atc'?(p.atcTarget>20?'🎯':p.atcTarget):p.score}</div>
       <div class="p-tab-legs">${p.legs}L</div>
     </div>`).join('');
@@ -2418,6 +2599,7 @@ function buildNumpad() {
 }
 
 function enterScore(num, override) {
+  if (G.players[G.cur]?.isBot) return;
   if (G.darts.length >= 3) return;
   const mult = override !== undefined ? override : (curMod==='D'?2:curMod==='T'?3:1);
   const val = num * mult;
@@ -2484,6 +2666,7 @@ function updateStrategy() {
 }
 
 function confirmTurn() {
+  if (G.players[G.cur]?.isBot) return;
   const p = G.players[G.cur];
   const tot = G.darts.reduce((s,d) => s+d.val, 0);
   const after = p.score - tot;
@@ -2505,6 +2688,7 @@ function nextPlayer() {
   if (G.cur === 0) { G.round++; updateGameRound(); }
   updatePlayerTabs();
   if (G.mode === 'atc') updateATCView(); else updateX01View();
+  scheduleBotTurn();
 }
 
 // ── ATC ────────────────────────────────────────────────
@@ -2548,6 +2732,7 @@ function updateATCView() {
   document.getElementById('atc-tip').textContent = tips[p.atcTarget] || `Aim for segment ${p.atcTarget>20?'Bull':p.atcTarget}.`;
 }
 function atcHit() {
+  if (G.players[G.cur]?.isBot) return;
   const p = G.players[G.cur];
   const isC = G.useCam;
   const arr = isC ? G.darts : G.atcDarts;
@@ -2575,6 +2760,7 @@ function atcHit() {
   if (sl === 2) { if (isC) setTimeout(camNext,500); else setTimeout(nextPlayer,500); }
 }
 function atcMiss() {
+  if (G.players[G.cur]?.isBot) return;
   const isC = G.useCam;
   const arr = isC ? G.darts : G.atcDarts;
   const sl = arr.length;
@@ -3156,6 +3342,9 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 </script>
+<!-- ── BOT THINKING INDICATOR ── -->
+<div id="bot-thinking">🤖 <span id="bot-thinking-name">Bot</span> is throwing...</div>
+
 <!-- ── VIDEO CALL PANEL ── -->
 <div class="call-panel" id="call-panel">
   <div>
