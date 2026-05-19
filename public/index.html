@@ -1724,11 +1724,50 @@ const CO = {170:['T20','T20','Bull'],167:['T20','T19','Bull'],164:['T20','T18','
 // ════════════════════════════════════════════════════════
 //  UTILS
 // ════════════════════════════════════════════════════════
+const GAME_PAGES = new Set(['page-game', 'page-camera']);
+
 function goPage(id) {
+  const wasInGame = GAME_PAGES.has(currentPage());
   document.querySelectorAll('.page').forEach(p => p.classList.remove('show'));
   document.getElementById(id).classList.add('show');
   window.scrollTo(0,0);
+  // Push a history entry when entering a game so back button is interceptable
+  if (GAME_PAGES.has(id)) {
+    history.pushState({ inGame: true }, '');
+  } else if (wasInGame) {
+    // Leaving game — remove the guard state
+    if (history.state && history.state.inGame) history.back();
+  }
 }
+
+function currentPage() {
+  const el = document.querySelector('.page.show');
+  return el ? el.id : null;
+}
+
+// Browser back button while in a game
+window.addEventListener('popstate', (e) => {
+  if (GAME_PAGES.has(currentPage())) {
+    // Re-push the state so the page stays, then ask to confirm
+    history.pushState({ inGame: true }, '');
+    if (confirm('Are you sure you want to leave this game? Your opponent will be disconnected.')) {
+      stopCam();
+      if (callActive) endCall();
+      if (G.ws) { G.ws.close(); G.ws = null; }
+      // Remove guard state and go home
+      history.back();
+      setTimeout(() => goPage('page-home'), 50);
+    }
+  }
+});
+
+// Tab close / browser refresh while in a game
+window.addEventListener('beforeunload', (e) => {
+  if (GAME_PAGES.has(currentPage())) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
 function showToast(msg, dur=2800) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -2231,7 +2270,7 @@ function camNext() {
 }
 
 function quitGame() {
-  if (confirm('Quit the current game?')) {
+  if (confirm('Are you sure you want to leave this game? Your opponent will be disconnected.')) {
     stopCam();
     if (callActive) endCall();
     const gcb = document.getElementById('game-call-btn');
