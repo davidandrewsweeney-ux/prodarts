@@ -351,6 +351,44 @@ input::placeholder { color: var(--platinum-dim); opacity: .6; }
 }
 .toggle.on::after { transform: translateX(19px); }
 
+/* ── PLAYER PROFILES ── */
+.profile-bar { display:flex; align-items:center; gap:12px; background:var(--obsidian-3); border:1.5px solid var(--bdr); border-radius:14px; padding:12px 14px; margin-bottom:16px; cursor:pointer; transition:all .2s; }
+.profile-bar:active { background:var(--obsidian-4); }
+.profile-avatar { width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg,var(--gold-dim),var(--gold)); display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; border:2px solid rgba(201,168,76,.4); }
+.profile-avatar.empty { background:var(--obsidian-2); border-style:dashed; font-size:18px; }
+.profile-bar-name { font-size:15px; font-weight:600; color:var(--platinum); }
+.profile-bar-sub { font-size:11px; color:var(--platinum-dim); margin-top:1px; }
+.profile-bar-arrow { color:var(--platinum-dim); font-size:20px; margin-left:auto; }
+/* Profile modal */
+.pd-tabs { display:flex; border-bottom:1px solid var(--bdr); margin:0 -4px 16px; }
+.pd-tab { flex:1; text-align:center; padding:10px 4px; font-size:12px; font-weight:600; letter-spacing:.8px; color:var(--platinum-dim); cursor:pointer; border-bottom:2px solid transparent; transition:all .2s; text-transform:uppercase; }
+.pd-tab.active { color:var(--gold-light); border-bottom-color:var(--gold); }
+.pd-profile-card { display:flex; align-items:center; gap:12px; background:var(--obsidian-2); border:1.5px solid var(--bdr); border-radius:12px; padding:12px; margin-bottom:10px; cursor:pointer; transition:all .2s; }
+.pd-profile-card.active-card { border-color:var(--gold); background:rgba(201,168,76,.08); }
+.pd-profile-card:active { opacity:.8; }
+.pd-card-avatar { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,var(--gold-dim),var(--gold)); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+.pd-card-name { font-size:14px; font-weight:600; color:var(--platinum); }
+.pd-card-sub { font-size:11px; color:var(--platinum-dim); margin-top:1px; }
+.pd-card-check { margin-left:auto; color:var(--gold); font-size:18px; }
+.emoji-grid { display:grid; grid-template-columns:repeat(8,1fr); gap:6px; margin:12px 0; }
+.emoji-opt { font-size:22px; padding:6px; border-radius:8px; border:2px solid transparent; cursor:pointer; text-align:center; transition:all .15s; }
+.emoji-opt.picked { border-color:var(--gold); background:rgba(201,168,76,.15); }
+.pd-stat-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid rgba(255,255,255,.06); }
+.pd-stat-label { font-size:12px; color:var(--platinum-dim); letter-spacing:.5px; }
+.pd-stat-val { font-size:14px; font-weight:700; color:var(--platinum); }
+.pd-h2h-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,.06); }
+.pd-h2h-name { flex:1; font-size:13px; color:var(--platinum); font-weight:500; }
+.pd-h2h-record { font-size:13px; font-weight:700; }
+.pd-hist-item { padding:9px 0; border-bottom:1px solid rgba(255,255,255,.06); }
+.pd-hist-top { display:flex; justify-content:space-between; align-items:center; }
+.pd-hist-opp { font-size:13px; color:var(--platinum); font-weight:500; }
+.pd-hist-result { font-size:12px; font-weight:700; padding:2px 8px; border-radius:10px; }
+.pd-hist-result.win { background:rgba(82,183,136,.2); color:#52b788; }
+.pd-hist-result.loss { background:rgba(231,76,60,.15); color:#e74c3c; }
+.pd-hist-meta { font-size:10px; color:var(--platinum-dim); margin-top:2px; }
+.friend-chip { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,.06); }
+.friend-chip-avatar { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,var(--gold-dim),var(--gold)); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+
 /* ── BOT SECTION ── */
 .bot-level-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 0 4px; }
 .bot-lvl-btn { padding: 10px 6px; border-radius: 10px; border: 1.5px solid var(--bdr); background: var(--obsidian-2); color: var(--platinum); font-size: 13px; font-weight: 600; cursor: pointer; transition: all .2s; letter-spacing: .3px; }
@@ -1220,6 +1258,64 @@ input::placeholder { color: var(--platinum-dim); opacity: .6; }
   </div>
 </div>
 
+<!-- ── PROFILE MODAL ── -->
+<div class="modal-backdrop" id="profile-modal">
+  <div class="modal-sheet" style="max-height:88vh;display:flex;flex-direction:column;overflow:hidden">
+    <div class="modal-title" id="pd-modal-title">PLAYER PROFILES</div>
+    <div class="pd-tabs" id="pd-tabs">
+      <div class="pd-tab active" id="pd-tab-profiles" onclick="pdShowTab('profiles')">Profiles</div>
+      <div class="pd-tab" id="pd-tab-stats" onclick="pdShowTab('stats')">My Stats</div>
+      <div class="pd-tab" id="pd-tab-friends" onclick="pdShowTab('friends')">Friends</div>
+      <div class="pd-tab" id="pd-tab-history" onclick="pdShowTab('history')">History</div>
+    </div>
+    <div style="overflow-y:auto;flex:1;padding-bottom:4px" id="pd-tab-content">
+
+      <!-- PROFILES TAB -->
+      <div id="pd-panel-profiles">
+        <div id="pd-profiles-list"></div>
+        <button class="btn btn-green btn-sm" style="width:100%;margin-top:4px;margin-bottom:12px" onclick="pdShowCreate()">+ Create New Profile</button>
+
+        <!-- Create profile form (hidden by default) -->
+        <div id="pd-create-form" style="display:none;border-top:1px solid var(--bdr);padding-top:14px">
+          <div class="modal-title" style="font-size:13px;margin-bottom:10px">NEW PROFILE</div>
+          <input type="text" id="pd-new-name" placeholder="Your name" style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid var(--bdr);background:var(--obsidian-2);color:var(--platinum);font-size:15px;margin-bottom:8px;box-sizing:border-box">
+          <div style="font-size:11px;color:var(--platinum-dim);letter-spacing:1px;margin-bottom:6px">CHOOSE AVATAR</div>
+          <div class="emoji-grid" id="pd-emoji-grid"></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary btn-sm" style="flex:1" onclick="pdCreateProfile()">Save Profile</button>
+            <button class="btn btn-secondary btn-sm" style="flex:1" onclick="pdHideCreate()">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATS TAB -->
+      <div id="pd-panel-stats" style="display:none">
+        <div id="pd-stats-content"><div style="text-align:center;color:var(--platinum-dim);padding:30px 0">Select a profile first</div></div>
+      </div>
+
+      <!-- FRIENDS TAB -->
+      <div id="pd-panel-friends" style="display:none">
+        <div id="pd-friends-list"></div>
+        <div style="margin-top:12px;border-top:1px solid var(--bdr);padding-top:12px">
+          <div style="font-size:11px;color:var(--platinum-dim);letter-spacing:1px;margin-bottom:8px">ADD FRIEND BY NAME</div>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="pd-friend-name-input" placeholder="Friend's name" style="flex:1;padding:9px 12px;border-radius:10px;border:1.5px solid var(--bdr);background:var(--obsidian-2);color:var(--platinum);font-size:14px">
+            <button class="btn btn-green btn-sm" onclick="pdAddFriendByName()">Add</button>
+          </div>
+          <div style="font-size:10px;color:var(--platinum-dim);margin-top:6px">Add friends to track head-to-head records. Friends who also have profiles on this device will show their avatar.</div>
+        </div>
+      </div>
+
+      <!-- HISTORY TAB -->
+      <div id="pd-panel-history" style="display:none">
+        <div id="pd-history-list"></div>
+      </div>
+
+    </div>
+    <button class="btn btn-secondary" style="margin-top:10px;flex-shrink:0" onclick="closePdModal()">Close</button>
+  </div>
+</div>
+
 <!-- ── STATS MODAL ── -->
 <div class="modal-backdrop" id="stats-modal">
   <div class="modal-sheet">
@@ -1260,6 +1356,16 @@ input::placeholder { color: var(--platinum-dim); opacity: .6; }
   </div>
   <div class="scroll">
     <div class="home-body">
+
+      <!-- Profile bar -->
+      <div class="profile-bar" id="profile-bar" onclick="openPdModal()">
+        <div class="profile-avatar empty" id="pd-bar-avatar">👤</div>
+        <div style="flex:1">
+          <div class="profile-bar-name" id="pd-bar-name">Set up your profile</div>
+          <div class="profile-bar-sub" id="pd-bar-sub">Track stats, history &amp; friends</div>
+        </div>
+        <div class="profile-bar-arrow">›</div>
+      </div>
 
       <!-- Camera permission card -->
       <div class="cam-permission-card" style="margin-bottom:16px">
@@ -2997,6 +3103,292 @@ function generateQR(url) {
 }
 
 // ════════════════════════════════════════════════════════
+//  PLAYER PROFILES
+// ════════════════════════════════════════════════════════
+const PD_KEY = 'pd_profiles';
+const PD_ACTIVE_KEY = 'pd_active';
+const PD_AVATARS = ['🎯','🏹','⭐','🔥','💎','👑','🦅','🐺','🦁','🐯','🎱','🎲','🏆','⚡','🌟','🦊','🎪','🎭','🚀','🌊'];
+let _pdPickedEmoji = '🎯';
+let _pdActiveTab = 'profiles';
+
+function pdLoad() { try { return JSON.parse(localStorage.getItem(PD_KEY) || '[]'); } catch { return []; } }
+function pdSave(arr) { try { localStorage.setItem(PD_KEY, JSON.stringify(arr)); } catch {} }
+function pdGetActiveId() { return localStorage.getItem(PD_ACTIVE_KEY) || ''; }
+function pdGetActive() { const id = pdGetActiveId(); return pdLoad().find(p => p.id === id) || null; }
+function pdSetActive(id) { localStorage.setItem(PD_ACTIVE_KEY, id || ''); pdRefreshBar(); }
+
+function pdRefreshBar() {
+  const active = pdGetActive();
+  const avatar = document.getElementById('pd-bar-avatar');
+  const name = document.getElementById('pd-bar-name');
+  const sub = document.getElementById('pd-bar-sub');
+  if (!active) {
+    avatar.textContent = '👤'; avatar.className = 'profile-avatar empty';
+    name.textContent = 'Set up your profile';
+    sub.textContent = 'Track stats, history & friends';
+  } else {
+    avatar.textContent = active.avatar; avatar.className = 'profile-avatar';
+    name.textContent = active.name;
+    const s = active.stats;
+    const avg = s.turnCount > 0 ? (s.totalScore / s.turnCount).toFixed(1) : '—';
+    sub.textContent = `${s.gamesPlayed} games · ${s.gamesWon} wins · Avg ${avg}`;
+  }
+}
+
+function pdGenId() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 5); }
+
+function openPdModal() {
+  pdShowTab('profiles');
+  document.getElementById('pd-create-form').style.display = 'none';
+  pdRenderProfiles();
+  document.getElementById('profile-modal').classList.add('open');
+}
+function closePdModal() { document.getElementById('profile-modal').classList.remove('open'); }
+
+function pdShowTab(tab) {
+  _pdActiveTab = tab;
+  ['profiles','stats','friends','history'].forEach(t => {
+    document.getElementById(`pd-panel-${t}`).style.display = t === tab ? '' : 'none';
+    document.getElementById(`pd-tab-${t}`).classList.toggle('active', t === tab);
+  });
+  if (tab === 'stats') pdRenderStats();
+  if (tab === 'friends') pdRenderFriends();
+  if (tab === 'history') pdRenderHistory();
+}
+
+function pdRenderProfiles() {
+  const profiles = pdLoad();
+  const activeId = pdGetActiveId();
+  const el = document.getElementById('pd-profiles-list');
+  if (!profiles.length) {
+    el.innerHTML = '<div style="text-align:center;color:var(--platinum-dim);padding:20px 0 10px">No profiles yet — create one below</div>';
+    return;
+  }
+  el.innerHTML = profiles.map(p => {
+    const s = p.stats;
+    const avg = s.turnCount > 0 ? (s.totalScore / s.turnCount).toFixed(1) : '—';
+    const isActive = p.id === activeId;
+    return `<div class="pd-profile-card ${isActive ? 'active-card' : ''}" onclick="pdSelectProfile('${p.id}')">
+      <div class="pd-card-avatar">${p.avatar}</div>
+      <div style="flex:1">
+        <div class="pd-card-name">${p.name}</div>
+        <div class="pd-card-sub">${s.gamesPlayed} games · ${s.gamesWon} wins · Avg ${avg}</div>
+      </div>
+      ${isActive ? '<div class="pd-card-check">✓</div>' : ''}
+      <button onclick="event.stopPropagation();pdDeleteProfile('${p.id}')" style="background:none;border:none;color:var(--platinum-dim);font-size:16px;cursor:pointer;padding:4px 6px">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function pdSelectProfile(id) {
+  pdSetActive(id);
+  pdRenderProfiles();
+  showToast(`Profile switched`);
+}
+
+function pdDeleteProfile(id) {
+  if (!confirm('Delete this profile? All stats and history will be lost.')) return;
+  const profiles = pdLoad().filter(p => p.id !== id);
+  pdSave(profiles);
+  if (pdGetActiveId() === id) pdSetActive('');
+  pdRenderProfiles();
+  showToast('Profile deleted');
+}
+
+function pdShowCreate() {
+  document.getElementById('pd-create-form').style.display = '';
+  document.getElementById('pd-new-name').value = '';
+  _pdPickedEmoji = PD_AVATARS[0];
+  const grid = document.getElementById('pd-emoji-grid');
+  grid.innerHTML = PD_AVATARS.map((e, i) =>
+    `<div class="emoji-opt ${i === 0 ? 'picked' : ''}" onclick="pdPickEmoji('${e}',this)">${e}</div>`
+  ).join('');
+}
+function pdHideCreate() { document.getElementById('pd-create-form').style.display = 'none'; }
+function pdPickEmoji(e, el) {
+  _pdPickedEmoji = e;
+  document.querySelectorAll('.emoji-opt').forEach(o => o.classList.remove('picked'));
+  el.classList.add('picked');
+}
+
+function pdCreateProfile() {
+  const name = document.getElementById('pd-new-name').value.trim();
+  if (!name) { showToast('Enter a name'); return; }
+  const profiles = pdLoad();
+  if (profiles.find(p => p.name.toLowerCase() === name.toLowerCase())) { showToast('Name already taken'); return; }
+  const profile = {
+    id: pdGenId(), name, avatar: _pdPickedEmoji, createdAt: Date.now(),
+    stats: { gamesPlayed:0, gamesWon:0, legsWon:0, totalScore:0, turnCount:0, highTurn:0 },
+    friends: [],
+    h2h: {},
+    history: []
+  };
+  profiles.push(profile);
+  pdSave(profiles);
+  pdSetActive(profile.id);
+  pdHideCreate();
+  pdRenderProfiles();
+  showToast(`Profile created! Welcome, ${name} ${_pdPickedEmoji}`);
+}
+
+function pdRenderStats() {
+  const active = pdGetActive();
+  const el = document.getElementById('pd-stats-content');
+  if (!active) { el.innerHTML = '<div style="text-align:center;color:var(--platinum-dim);padding:30px 0">Select a profile first</div>'; return; }
+  const s = active.stats;
+  const avg = s.turnCount > 0 ? (s.totalScore / s.turnCount).toFixed(1) : '—';
+  const wr = s.gamesPlayed > 0 ? Math.round((s.gamesWon / s.gamesPlayed) * 100) : 0;
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--bdr)">
+      <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--gold-dim),var(--gold));display:flex;align-items:center;justify-content:center;font-size:26px">${active.avatar}</div>
+      <div><div style="font-size:18px;font-weight:700;color:var(--platinum)">${active.name}</div>
+      <div style="font-size:11px;color:var(--platinum-dim)">Member since ${new Date(active.createdAt).toLocaleDateString()}</div></div>
+    </div>
+    <div class="stats-grid" style="margin-bottom:16px">
+      <div class="stat-cell"><div class="stat-cell-val">${s.gamesWon}</div><div class="stat-cell-lbl">Wins</div></div>
+      <div class="stat-cell"><div class="stat-cell-val">${s.gamesPlayed}</div><div class="stat-cell-lbl">Games</div></div>
+      <div class="stat-cell"><div class="stat-cell-val">${wr}%</div><div class="stat-cell-lbl">Win Rate</div></div>
+      <div class="stat-cell"><div class="stat-cell-val">${avg}</div><div class="stat-cell-lbl">Avg/Turn</div></div>
+      <div class="stat-cell"><div class="stat-cell-val">${s.highTurn || '—'}</div><div class="stat-cell-lbl">Best Turn</div></div>
+      <div class="stat-cell"><div class="stat-cell-val">${s.legsWon}</div><div class="stat-cell-lbl">Legs Won</div></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn btn-secondary btn-sm" style="flex:1" onclick="pdRenamePrompt()">Rename</button>
+      <button class="btn btn-secondary btn-sm" style="flex:1" onclick="pdChangeAvatarPrompt()">Change Avatar</button>
+    </div>`;
+}
+
+function pdRenamePrompt() {
+  const active = pdGetActive();
+  if (!active) return;
+  const newName = prompt('New name:', active.name);
+  if (!newName || !newName.trim()) return;
+  const profiles = pdLoad();
+  const p = profiles.find(pr => pr.id === active.id);
+  if (p) { p.name = newName.trim(); pdSave(profiles); pdRefreshBar(); pdRenderStats(); showToast('Name updated'); }
+}
+function pdChangeAvatarPrompt() {
+  const emojis = PD_AVATARS.join('  ');
+  const picked = prompt(`Choose an avatar (copy one):\n${emojis}`);
+  if (!picked || !picked.trim()) return;
+  const active = pdGetActive();
+  const profiles = pdLoad();
+  const p = profiles.find(pr => pr.id === active.id);
+  if (p) { p.avatar = picked.trim(); pdSave(profiles); pdRefreshBar(); pdRenderStats(); showToast('Avatar updated'); }
+}
+
+function pdRenderFriends() {
+  const active = pdGetActive();
+  const el = document.getElementById('pd-friends-list');
+  if (!active) { el.innerHTML = '<div style="text-align:center;color:var(--platinum-dim);padding:20px 0">Select a profile first</div>'; return; }
+  const friends = active.friends || [];
+  const allProfiles = pdLoad();
+  if (!friends.length) { el.innerHTML = '<div style="text-align:center;color:var(--platinum-dim);padding:20px 0">No friends added yet</div>'; return; }
+  el.innerHTML = friends.map(fname => {
+    const fp = allProfiles.find(p => p.name.toLowerCase() === fname.toLowerCase());
+    const avatar = fp ? fp.avatar : '👤';
+    const h2h = (active.h2h || {})[fname] || { wins: 0, losses: 0 };
+    const total = h2h.wins + h2h.losses;
+    const wr = total > 0 ? Math.round(h2h.wins / total * 100) : 0;
+    return `<div class="friend-chip">
+      <div class="friend-chip-avatar">${avatar}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;color:var(--platinum)">${fname}</div>
+        <div style="font-size:11px;color:var(--platinum-dim)">${total} games together</div>
+      </div>
+      <div style="text-align:right">
+        <div class="pd-h2h-record" style="color:${h2h.wins >= h2h.losses ? '#52b788' : '#e74c3c'}">${h2h.wins}W – ${h2h.losses}L</div>
+        <div style="font-size:10px;color:var(--platinum-dim)">${wr}% win rate</div>
+      </div>
+      <button onclick="pdRemoveFriend('${fname}')" style="background:none;border:none;color:var(--platinum-dim);font-size:15px;cursor:pointer;padding:4px 6px;margin-left:4px">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function pdAddFriendByName() {
+  const active = pdGetActive();
+  if (!active) { showToast('Select a profile first'); return; }
+  const fname = document.getElementById('pd-friend-name-input').value.trim();
+  if (!fname) return;
+  if (fname.toLowerCase() === active.name.toLowerCase()) { showToast("Can't add yourself!"); return; }
+  const profiles = pdLoad();
+  const idx = profiles.findIndex(p => p.id === active.id);
+  if (!profiles[idx].friends) profiles[idx].friends = [];
+  if (profiles[idx].friends.some(f => f.toLowerCase() === fname.toLowerCase())) { showToast('Already a friend'); return; }
+  profiles[idx].friends.push(fname);
+  pdSave(profiles);
+  document.getElementById('pd-friend-name-input').value = '';
+  pdRenderFriends();
+  showToast(`${fname} added as a friend!`);
+}
+
+function pdRemoveFriend(fname) {
+  const active = pdGetActive();
+  if (!active) return;
+  const profiles = pdLoad();
+  const idx = profiles.findIndex(p => p.id === active.id);
+  profiles[idx].friends = (profiles[idx].friends || []).filter(f => f.toLowerCase() !== fname.toLowerCase());
+  pdSave(profiles);
+  pdRenderFriends();
+  showToast(`${fname} removed`);
+}
+
+function pdRenderHistory() {
+  const active = pdGetActive();
+  const el = document.getElementById('pd-history-list');
+  if (!active) { el.innerHTML = '<div style="text-align:center;color:var(--platinum-dim);padding:30px 0">Select a profile first</div>'; return; }
+  const history = active.history || [];
+  if (!history.length) { el.innerHTML = '<div style="text-align:center;color:var(--platinum-dim);padding:30px 0">No games recorded yet</div>'; return; }
+  el.innerHTML = history.map(g => {
+    const date = new Date(g.date).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+    const opps = (g.opponents || []).join(', ') || 'Unknown';
+    return `<div class="pd-hist-item">
+      <div class="pd-hist-top">
+        <div class="pd-hist-opp">vs ${opps}</div>
+        <div class="pd-hist-result ${g.result}">${g.result === 'win' ? 'WIN' : 'LOSS'}</div>
+      </div>
+      <div class="pd-hist-meta">${date} · ${g.mode || '501'} · Avg ${g.avgTurn || '—'} · Best ${g.highTurn || '—'}</div>
+    </div>`;
+  }).join('');
+}
+
+// Record game result for the active profile (called from handleWin)
+function pdRecordGameResult(winnerName) {
+  const active = pdGetActive();
+  if (!active) return;
+  const profiles = pdLoad();
+  const idx = profiles.findIndex(p => p.id === active.id);
+  if (idx === -1) return;
+  const pr = profiles[idx];
+  const myPlayer = G.players.find(pl => pl.name === active.name);
+  if (!myPlayer) return; // active profile user not in this game
+
+  const isWinner = myPlayer.name === winnerName;
+  const opponents = G.players.filter(pl => pl.name !== active.name && !pl.isBot).map(pl => pl.name);
+  const allOpponents = G.players.filter(pl => pl.name !== active.name).map(pl => pl.name);
+  const avg = myPlayer.turnCount > 0 ? +(myPlayer.totalScore / myPlayer.turnCount).toFixed(1) : 0;
+
+  pr.stats.gamesPlayed++;
+  if (isWinner) pr.stats.gamesWon++;
+  pr.stats.legsWon = (pr.stats.legsWon || 0) + (myPlayer.legs || 0);
+  pr.stats.totalScore = (pr.stats.totalScore || 0) + (myPlayer.totalScore || 0);
+  pr.stats.turnCount = (pr.stats.turnCount || 0) + (myPlayer.turnCount || 0);
+  pr.stats.highTurn = Math.max(pr.stats.highTurn || 0, myPlayer.highTurn || 0);
+
+  // H2H update (vs all opponents)
+  allOpponents.forEach(oname => {
+    if (!pr.h2h[oname]) pr.h2h[oname] = { wins: 0, losses: 0 };
+    if (isWinner) pr.h2h[oname].wins++; else pr.h2h[oname].losses++;
+  });
+
+  pr.history.unshift({ date: Date.now(), mode: G.mode, opponents: allOpponents, result: isWinner ? 'win' : 'loss', avgTurn: avg, highTurn: myPlayer.highTurn || 0 });
+  if (pr.history.length > 30) pr.history.pop();
+
+  pdSave(profiles);
+  pdRefreshBar();
+}
+
+// ════════════════════════════════════════════════════════
 //  PLAYER STATS (localStorage persistence)
 // ════════════════════════════════════════════════════════
 function loadStats() {
@@ -3006,6 +3398,7 @@ function saveStats(s) {
   try { localStorage.setItem('prodarts_stats', JSON.stringify(s)); } catch {}
 }
 function recordWin(winnerName) {
+  pdRecordGameResult(winnerName);
   const stats = loadStats();
   G.players.forEach(pl => {
     if (!stats[pl.name]) stats[pl.name] = { wins: 0, games: 0, legs: 0, turns: 0, totalScore: 0, best: 0 };
@@ -3310,6 +3703,7 @@ function endCall() {
 window.addEventListener('DOMContentLoaded', () => {
   buildNumpad();
   buildModalNumpad();
+  pdRefreshBar();
 
   // Check if camera permission already granted via Permissions API
   if (navigator.permissions) {
